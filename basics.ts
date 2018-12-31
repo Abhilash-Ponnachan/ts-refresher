@@ -1,2 +1,8 @@
-const PI: number = 22 / 7;
-console.log(`Value of PI is ${PI}`);
+class Startup{
+    public static main(args: any): number{
+        console.log("Hola!");
+        return 0;
+    }
+}
+
+Startup.main(null);

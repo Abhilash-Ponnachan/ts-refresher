@@ -73,5 +73,25 @@ This should create a _tsconfig.json_ file with a lot of options (most of which a
 }
 ```  
 _Note that I have removed a lot of the commented lines for brevity._  
-With this VS Code can provide rich syntax highlighting and editing experince for the TS project.
-
+With this VS Code can provide rich syntax highlighting and editing experince for the TS project.  
+- #### Trying it out ####
+    At this stage we can actually try writing some simple TS code, compiling and running it. So we make a simple TS file _'basics.ts'_ with some _Hello World_ code - 
+    ```typescript
+    class Startup{
+        public static main(args: any): number{
+            console.log("Hello world!");
+            return 0;
+        }
+    }
+    Startup.main(null);
+    ```
+    A rudimentary class with a static method that prints to the console.
+    To build and see the output we would do the following -
+    ```bash
+    $ tsc basics.ts
+    $ node basics.js
+    Hello World!
+    ```
+    The TS file gets compiled to JS and, then we can run it using Node.  
+**Build Task**  
+Typically
