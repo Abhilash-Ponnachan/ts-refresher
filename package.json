@@ -1,0 +1,11 @@
+{
+  "name": "ts-refresher",
+  "version": "1.0.0",
+  "description": "A refresher for TS concepts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abhi",
+  "license": "MIT"
+}
