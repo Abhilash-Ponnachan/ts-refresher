@@ -45,7 +45,7 @@ This file can be created manually and some basic standard options typed in (or c
 $ tsc --init
 ```
 This should create a _tsconfig.json_ file with a lot of options (most of which are commented out). We will just focus on the essentials for now - 
-```json
+```javascript
 {
   "compilerOptions": {
     /* Basic Options */
