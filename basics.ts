@@ -1,6 +1,6 @@
 class Startup{
     public static main(args: any): number{
-        console.log("Hola!");
+        console.log("Watch is watching you!");
         return 0;
     }
 }
