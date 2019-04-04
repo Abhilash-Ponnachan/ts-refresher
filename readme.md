@@ -188,5 +188,99 @@ The first step is to setup a development environment to play with.
 
     - **"launch" v/s "attach"**  
         VS Code gives two debugging modes, each for a different workflow - _"launch"_ and _"attach"_.   
-         - When we want the debugger to _"attach"_ to a running process, like we would do to debug a _browser app_, we use the _"attach"_ mode. The attributes for this configuration would indicate the details of the process to attach to.
-         - When we need the process to be launched first, like when debugging server-side applications we specify the _"launch"_ mode. For 
+         - When we want the debugger to _"attach"_ to a running process, like we would do to debug a _browser app_, we use the _"attach"_ mode. The attributes for this configuration would indicate the details of the process to attach to. For _Chrome debugging_ we typically use this.
+
+         - When we need the process to be launched first, like when debugging server-side applications we specify the _"launch"_ mode. For _Node.js_ applications we would typically use _"launch"_.  
+
+## Variable Declarations
+TS follows the exact same keywords and behaviour for variable declaration as ES6+. 
+- **var**  
+    The _var_ keyword used to be the way we declare variable till ES5. It declares a variable that has _function scope_. This is different from many other languages and has the potential for some un-intended behaviour - 
+    ```typescript
+    var x = 10; // has "global" scope
+    function foo(){
+        var x = 20;
+        if (true){
+            var x = 15;
+            // actually modifies the 'x' declared above
+            console.log(`2 - x = ${x}`);
+            // 2 - x = 15
+        }
+        console.log(`3 - x = ${x}`);
+        // 3 - x = 15
+        // the function level 'x' got modified to 15
+        for (var x=0; x<3; x++){
+
+        }
+        console.log(`4 - x = ${x}`);
+        // 4 - x = 3
+        // the function level 'x' got modified!
+    }
+    console.log(`1 - x = ${x}`);
+    // 1- x = 10
+    foo();
+    ```
+    Output >>
+    ```bash
+        1 - x = 10
+        2 - x = 15
+        3 - x = 15
+        4 - x = 3
+    ```
+    This gets especillay confusing when _variable hoisting_ gets into the mix.
+- **let**  
+    ES6+ and TS intrioduces _let_ keyword which has _block level scope_. This is more natural and avoids many potential pitfalls. Let us change the above example to _let_ - 
+    ```typescript
+    let x = 10; // has "module" scope
+    function foo(){
+        let x = 20;
+        if (true){
+            let x = 15;
+            // this is new 'x' within the "if" block
+            console.log(`2 - x = ${x}`);
+            // 2 - x = 15
+        }
+        console.log(`3 - x = ${x}`);
+        // 3 - x = 20
+        // the function level 'x' remains same
+        for (let x=0; x<3; x++){
+            // this 'x' is a different loop variable in this block
+        }
+        console.log(`4 - x = ${x}`);
+        // 4 - x = 20
+        // the function level 'x' remians same
+    }
+    console.log(`1 - x = ${x}`);
+    // 1- x = 10
+    foo();
+    ```
+    Output >>
+    ```bash
+        1 - x = 10
+        2 - x = 15
+        3 - x = 20
+        4 - x = 20
+    ```
+- **const**  
+    Similarly the _const_ keyword introduced in ES6+ and TS is used to declare variables that should not be _re-assigned_.
+    ```typescript
+    function foo(){
+        const x = 23;
+
+        x = x + 3;
+        // compiler error - x is read-only
+
+        const o = [1, 2, 3];
+        o.push(4);
+        console.log(o);
+        // Array(4) [1, 2, 3, 4]
+        // the content of 'o' can be modified
+
+        o = o.concat([10, 20]);
+        // compiler error - 'o' cannot be reassigned
+    }
+    foo();
+    ```
+- If a variable will not change stick to _const_. Trying to use _const_ more forces us to write safer code, which can be easier to make asynchronous.
+- If the value can change stick to _let_ as that contains the variable to the minimum scope. 
+- We would rarely find a reason to use _var_ instead of _let_.
