@@ -1,9 +1,6 @@
-function foo(){
-    const x = 23;
-    //x = x + 3;
-    const o = [1, 2, 3];
-    o.push(4);
-    console.log(o);
-    // Array(4) [1, 2, 3, 4]
+function foo([p1, p2]: Array<number>){
+
+    console.log(`first arg = ${p1} and second arg = ${p2}`);
 }
-foo();
+const nums = [10, 20 , 30, 40];
+foo(nums);

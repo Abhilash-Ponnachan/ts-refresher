@@ -284,3 +284,56 @@ TS follows the exact same keywords and behaviour for variable declaration as ES6
 - If a variable will not change stick to _const_. Trying to use _const_ more forces us to write safer code, which can be easier to make asynchronous.
 - If the value can change stick to _let_ as that contains the variable to the minimum scope. 
 - We would rarely find a reason to use _var_ instead of _let_.
+- These are known as the _principle of least privilege_.
+
+## Basic Types
+
+A primary goal of _TS_ is to bring _static typing_ to our _JS_ development. _TS_ achieves this by enabling us to specify the type of variables. The `tsc` compiler checks the code to ensure that the usage of the variables conform to and are consitent with the specified type.  
+However, once compiled it is plain _JS_ and therefore no type information (from _TS_) is available at runtime!  
+Even though it reduces to _JS_ at runtime, the static type capability of _TS_ during developemnt vastly improves our ability to scale it across larger teams, ensure better quality code with less chance of errors that leak to execution time.  
+
+### Primitive Types
+This is the same set of _primitive data types_ from _JS_, namely - `number`, `string`, `boolean`, `null`, `undefined`, `symbol` (introduced in _ES6_). In _TS_ we can declare variables specifying these types as shown -
+
+
+## Destructuring
+
+Destructuring is a syntactic construct that allows the `expansion` of a _collection or composite_ on the right into _individual varaibles_ on the left in an assignment.
+
+### Array Destructuring
+
+We can use destructing on _Arrays_ as shown:
+```typescript
+const nums = [100, 200, 300];
+const [first, second] = nums ; // array destructuring
+console.log(`first = ${first} and second = ${second}`);
+```  
+Note how the extra values to the right get ignored in the destructuring assignment.  
+This is useful for writing functions that take arrays as paramter and we want to access the elements within.  
+```typescript
+function foo([p1, p2]: Array<number>){
+    console.log(`first arg = ${p1} and second arg = ${p2}`);
+}
+const nums = [10, 20 , 30, 40];
+foo(nums);
+```  
+- **Partial destructuring (...\<remaining>)** -  
+    If we wish to destructue only part of the array, say the first couple of elements and obtain what is left as another array, we can do that using the `"..."` operator - 
+    ```typescript
+    const nums = [10, 20 , 30, 40, 50];
+    const [first, second, ...rest] = nums;
+    console.log(`first = ${first}, second = ${second}`);
+    // first = 10, second = 20
+    console.log(`rest= ${rest}, type of 'rest' = ${rest.constructor.name}`);
+    // rest= 30,40,50, type of 'rest' = Array
+    ```
+    Note how the `rest` variable is an `Array` containing the remaining elements.
+
+- **Ignoring elements** -  
+    Since it is all `JavaScript` we can simply ignore elements we are not interested in -
+    ```typescript
+    const nums = [10, 20 , 30, 40, 50];
+    const [, second, , fourth] = nums;
+    console.log(`second = ${second}, fourth = ${fourth}`);
+    // second = 20, fourth = 40
+    ```
