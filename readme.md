@@ -294,6 +294,103 @@ Even though it reduces to _JS_ at runtime, the static type capability of _TS_ du
 
 ### Primitive Types
 This is the same set of _primitive data types_ from _JS_, namely - `number`, `string`, `boolean`, `null`, `undefined`, `symbol` (introduced in _ES6_). In _TS_ we can declare variables specifying these types as shown -
+- **boolean**  
+    `boolean` is the simplest data type representing `true` or `false` values -
+    ```typescript
+    const hasValue: boolean = [].length > 0;
+    console.log(hasValue);
+    // false
+    ```
+
+- **number**  
+    Like _JS_ all numeric values are _floating point_ values and have the type `number`. They can have _decimal_, _hexadecimal_, _binary_ & _octal_ formats -
+    ```typescript
+    const dec: number = 45;
+    const hex = 0xff;
+    const bin = 0b1101;
+    const oct = 0o76;
+    console.log(oct);
+    // 62
+    ```
+    Ofcourse everything is _JS_ at runtime so we are still susceptible to _floating point rounding errors_ -
+    ```typescript
+    // floating point rounding error
+    console.log(0.1 + 0.2 === 0.3);
+    // false
+    ```
+
+- **string**  
+    _JS_ and _TS_ uses the `string` type to represent textual data. In _TS_ the variables are specified to the of the type `string`. String data are instances of the `String` class.  
+    We can declare string lterals enclosing them in double quotes (`""`) or single quotes (`''`) - 
+    ```typescript
+    const s = "Hello there!";
+    console.log(typeof(s));
+    // string
+    console.log(s.constructor.name);
+    // String
+    ```
+    _Templated strings_ allow us to span multiple line as well as interpolate variables into it. This uses the `dash` (\`\`) to enclose the text and (`${}`) to paramterize the variables -
+    ```typescript
+    let name: string;
+    let last_login: number;
+
+    name = 'Alan';
+    last_login = 3;
+
+    const msg: string = `Welcome ${name}!
+
+    You last login was ${last_login} days back.`;
+    console.log(msg);
+    /*
+    Welcome Alan!
+
+    You last login was 3 days back.
+    */
+    ``` 
+### Arrays
+In _JS_ an array is a _mutable_, _ordered_ collection which is _untyped_. _TS_ allows us to specify the type of the values that an array can hold. There are two ways to declare arrays in _TS_ -
+- Array syntax  
+```typescript
+const evens: number[] = [2, 4, 6, 8];
+evens.push(10);
+
+console.log(evens);
+// (5) [2, 4, 6, 8, 10]
+
+console.log(`type of 'evens' = ${evens.constructor.name}`);
+// type of 'evens' = Array
+```
+- Type parameter (generic) syntax
+```typescript
+const odds: Array<number> = [1, 3, 5];
+odds.push(7);
+
+console.log(`(evens.constructor === odds.constructor) = ${evens.constructor === odds.constructor}`);
+// (evens.constructor === odds.constructor) = true
+```
+Whilst they are largely equivalent, there can be subtle differences in their usage. If we have an array that can hold a more than one data type (a _union type_ say), then we can directly do that with the _generic_ syntax -
+```typescript
+let stream: Array<boolean | number> = [false, 5.4, 6.2, false, 7.8, true];
+```
+If we wanted to do that with the _array syntax_ we would need to declare a type that represents the _union type_ -
+```typescript
+type stream_val = boolean | number;
+let stream: stream_val[] = [false, 5.4, 6.2, false, 7.8, true];
+```
+### Tuples
+_Tuples_ are a common data structure in many programming languages to represnt a compound type of fixed length. In _JS_ we handle this using arrays, but _TS_ provides a syntax to reprsent _tuples_ - 
+```typescript
+let rec: [number, string];
+rec = [1001, "Alan"];
+
+// Error - Tuples are not Commutative!!
+rec = ["Bob", 1002]; 
+```
+Behind the scene a _tuple_ is just a _JS_ array -
+```typescript
+console.log(`rec.constructor = ${rec.constructor.name}`);
+// rec.constructor = Array
+```
 
 
 ## Destructuring
