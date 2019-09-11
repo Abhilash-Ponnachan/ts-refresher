@@ -391,7 +391,54 @@ Behind the scene a _tuple_ is just a _JS_ array -
 console.log(`rec.constructor = ${rec.constructor.name}`);
 // rec.constructor = Array
 ```
+### Enums
+_TS_ brings _enums_ over and above the standard _JS_ types. _Enums_ are found in most other programming lanugages and provide a set of friendly names over ordinal values. In order to use an _enum_ type we first have to define it -
+```typescript
+enum Days {sun, mon, tue, wed, thu, fri, sat};
+let day: Days = Days.mon;
 
+console.log(`The day is ${day}`);
+// The day is 1
+
+day = Days.tue;
+console.log(`The day is ${day}`);
+// The day is 2
+
+console.log(day === Days.wed - 1);
+// true
+```
+_Note - how a variable of _enum_ type holds a number value._  
+By default the value starts and `0` and increments by `1`, we can however change or specify these values as we desire -
+```typescript
+enum Magnitude {Ones = 1, Tens = 10, Hundreds = 100, Thousands = 1000};
+let mag: Magnitude = Magnitude.Hundreds;
+
+console.log(`Magnitude is ${mag}`);
+// Magnitude is 100
+```
+A nifty thing about _enums_ in _TS_ is that we can easily go from the numberic value to its name as a string quite easily by accessing it using an index syntax -
+```typescript
+console.log(`Magnitude is in the ${Magnitude[mag]}`);
+// Magnitude is in the Hundreds
+```
+
+### Any
+If we wish to indicate that the value is not any specific type and can be _any_ type we use the `any` data type. This may be the case when working with dynamic content, or existing _JS_ libraries etc. Also note that `any` is different from specifying a value as `Object`, as for the latter _TS_ will typecheck to ensure we can only use members of `Object` on the value - 
+```typescript
+let data: any;
+data = 23.43;
+data = "Some text!";
+console.log(data.length);
+// data.length is accepted since type is 'any'
+
+let val: Object;
+val = "Some other text!";
+console.log(val.length);
+// comipler will complain as 'Object' does not have 'length' property
+```
+
+### Void
+xx
 
 ## Destructuring
 
