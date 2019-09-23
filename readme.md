@@ -438,7 +438,64 @@ console.log(val.length);
 ```
 
 ### Void
-xx
+`void` is used to indicate that the context has _no type_ at all. Typically used with functions that do not return a value - 
+```typescript
+function greet(name: string): void{
+    console.log(`Hellow ${name}`);
+}
+```
+It is obviously meaningless to declare variables of thios type, as the only values it could have would be `null` and `undefined`.
+
+### Null and Undefined
+`null` and `undefined` are really singleton values that variables can have to indicate the absence of a _value_. In _TS_ these two special values have their own types which are called the same. A variable to which nothing has been assigned starts off with `undefined`.
+```typescript
+let a;
+console.log(typeof(a)); // undefined
+
+let b = null;
+console.log(typeof(b)); // object
+b = 23;
+console.log(typeof(b)); // number
+
+let c: null = null;
+console.log(typeof(c)); // object
+c = 34; // 34 is not assignable to type 'null'
+```
+
+### Never
+_TS_ uses `never` type to represent functions that _never_ returns, such as those that will always throw an exception or goes into an infinite loop. We cannot assign any value to a varaible of type `never` (except `never` itself). It's purpose is for the type-sysetm to represnet functions that have no return.
+```typescript
+function fail(): never {
+    throw new Error();
+}
+```
+
+### Object
+Any value with _non-primitive_ type will have `object` as its root type.
+```typescript
+const evens: number[] = [2, 4, 6, 8];
+
+console.log(`type of evens = ${typeof(evens)}`); 
+// type of evens = object
+// using 'typeof' gives 'object'
+
+console.log(`actual type of evens' = ${evens.constructor.name}`);
+// actual type of evens = Array
+// use 'constructor' to find detailed type at runtime!
+```
+
+## Type Assertions
+_Type assertions_ are a way of forcibly specifying the value of a type as something that may be other than what the _transpiler_ infers. It is like _type casting_ in other languages, the difference is that _type assertion_ is only a comiple time feature that instructs the _transpiler_ to treat the value as a specific type. It has no checking or restructuring of data (unlike _boxing_/_unboxing_ in _C#_ for example) -
+```typescript
+let a: any = 'Hello there';
+console.log((<string>a).toUpperCase()); // HELLO THERE
+// using '<type>' to assert the type of the variable
+
+let b = 'Hello again';
+console.log((b as string).toLowerCase()); // hello again
+// using 'as' to assert type  
+```
+_Type assertion_ syntax can have two forms - prefixing with `<the-type>` or qualify with `as`. Either form is acceptable, though in _JSX_ only `as` assertions are allowed. Since the two forms have no runtime differences (unlike languages such as C# where these two forms have different semantics), it is better to stick to one consitent standard for a project/team.
 
 ## Destructuring
 
