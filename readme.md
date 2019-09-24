@@ -519,22 +519,102 @@ const nums = [10, 20 , 30, 40];
 foo(nums);
 ```  
 - **Partial destructuring (...\<remaining>)** -  
-    If we wish to destructue only part of the array, say the first couple of elements and obtain what is left as another array, we can do that using the `"..."` operator - 
-    ```typescript
-    const nums = [10, 20 , 30, 40, 50];
-    const [first, second, ...rest] = nums;
-    console.log(`first = ${first}, second = ${second}`);
-    // first = 10, second = 20
-    console.log(`rest= ${rest}, type of 'rest' = ${rest.constructor.name}`);
-    // rest= 30,40,50, type of 'rest' = Array
-    ```
-    Note how the `rest` variable is an `Array` containing the remaining elements.
+If we wish to destructue only part of the array, say the first couple of elements and obtain what is left as another array, we can do that using the `"..."` operator - 
+```typescript
+const nums = [10, 20 , 30, 40, 50];
+const [first, second, ...rest] = nums;
+console.log(`first = ${first}, second = ${second}`);
+// first = 10, second = 20
+console.log(`rest= ${rest}, type of 'rest' = ${rest.constructor.name}`);
+// rest= 30,40,50, type of 'rest' = Array
+```
+Note how the `rest` variable is an `Array` containing the remaining elements.
 
 - **Ignoring elements** -  
-    Since it is all `JavaScript` we can simply ignore elements we are not interested in -
-    ```typescript
-    const nums = [10, 20 , 30, 40, 50];
-    const [, second, , fourth] = nums;
-    console.log(`second = ${second}, fourth = ${fourth}`);
-    // second = 20, fourth = 40
-    ```
+Since it is all `JavaScript` we can simply ignore elements we are not interested in -
+```typescript
+const nums = [10, 20 , 30, 40, 50];
+const [, second, , fourth] = nums;
+console.log(`second = ${second}, fourth = ${fourth}`);
+// second = 20, fourth = 40
+```
+
+### Tuple Destructuring
+
+Just like _arrays_ we can destructure _tuples_ -
+```typescript
+let rec: [number, string, boolean];
+rec = [1001, 'Alan', true];
+
+// destructure tuple to individual variables
+let [roll_num, name] = rec;
+console.log(`${roll_num} - ${name}`); // 1001 - Alan
+```  
+
+For _tuples_ too we can access part of the elements individually and the remaining as a subset tuple, using the `...` operator -
+```typescript
+// destructure partially
+let [roll_num, ...rest] = rec;
+console.log(`${roll_num} - ${rest}: ${rest.constructor.name}`);
+// 1001 - Alan,true: Array
+```
+
+We can ignore the fields we do not need -
+```typescript
+// destructure ignoring some feilds
+let [, name, ] = rec;
+console.log(`name is '${name}'`);
+// name is 'Alan'
+```
+
+### Object Destructuring
+
+We can destructure _objects_ in the similar fashion as we do _arrays_ and _tuples_, however the variables on the left should have the same name as the object properties - 
+```typescript
+let my_obj = {
+    id: 1001,
+    name: 'Alan',
+    active: true,
+    score: 78
+};
+
+// the following will fail !!!!
+let {i, n} = my_obj;
+// error : 'i' does not exist on ...
+
+// this will work
+let {id, name} = my_obj;
+console.log(`id=${id}, name=${name}`);
+// id=1001, name=Alan
+```
+
+- **Using '`...`' for remaining properties**  
+Just like _arrays_ and _tuples_ we can use `...` to partially destructure an object and get the remaining properties as a new object -
+```typescript
+let {id, name, ...score} = my_obj;
+console.log(`Id = ${id}, score = ${score.score}`);
+// Id = 1001, score = 78
+```
+
+- **Rename Properties while destructuring**  
+It is possible to destructure objects to variables with names different from the declared property names, albeit with some 'confusing' syntax -
+```typescript
+// destructure object with different variable names
+let {id: id_num, name: first_name} = my_obj;
+// read - 'id' as 'id_num', 'name' as 'first_name'
+console.log(`ID = ${id_num}, First Name=${first_name}`);
+// ID = 1001, First Name=Alan
+```
+This syntax is a bit strange and better to be avoided.
+
+- **Default Values while destructuring**  
+We can specify _default values_ when destructuring objects -
+```typescript
+// defualt values when destructuring
+let {id, name, active = false, score = 0} = {id: 1002, name: 'Bob'};
+// active = false, score = 0
+```
+
+## Spread
+
+D
