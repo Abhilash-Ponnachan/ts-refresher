@@ -615,6 +615,70 @@ let {id, name, active = false, score = 0} = {id: 1002, name: 'Bob'};
 // active = false, score = 0
 ```
 
-## Spread
+## Spread (`...`)
 
-D
+_Spread_ is very similar to _destructuring_ - _spread_ **expands** a collection (_array_, _object_) into another _array_ or _object_ (whereas _destructuring_ expands a collection into _individual_ varaibales).
+- **Array spread** -
+```typescript
+let a = [10, 20, 30, 40];
+let b = [1, 2, 3, 4, ...a, 100, 200, 300];
+console.log(b);
+// [1, 2, 3, 4, 10, 20, 30, 40, 100, 200, 300]
+```
+The array `a` gets spread into the array `b`.
+
+- **Object spread** -  
+We can _spread_ an object into another object in a simialr fashion.
+```typescript
+const def = {room: "single", smoking: false, nights: 1};
+let booking = {...def, nights: 3};
+console.log(booking);
+// {room: "single", smoking: false, nights: 3}
+```
+The `def` object gets spread into the `booking` object, and the `nights` property gets overwritten. However, there order of specfying the properties matter when we _spread_ and _object_ -
+```typescript
+booking = {nights: 3, ...def};
+console.log(booking);
+// {nights: 1, room: "single", smoking: false}
+```
+The _spread_ comes later so it overwrites the `nights` poroperty to its value of `1` and the more specific valeu gets lost!  
+Another importnat point to remember is that when we _spread_ an object only its **enumerable** properties get copied (i.e. it is a shallow copy of the object). This can lad to confusing behaviour such as -
+```typescript
+const def =  
+{
+    room: "single",
+    smoking: false,
+    nights: 1,
+    isAvailable: function(): boolean{
+        return false;
+    }
+};
+let booking = {...def, nights: 3};
+console.log(booking);
+// {room: "single", smoking: false, nights: 3, isAvailable: ƒ}
+```
+In this case the method `isAvailable` gets copied because it is on the object itself, but the below will not work - 
+```typescript
+class Res 
+{
+    room = "single"; 
+    smoking = false;
+    nights = 1;
+    isAvailable(): boolean{
+        return false;
+    }
+};
+const def = new Res();
+let booking = {...def, nights: 3};
+console.log(booking);
+// {room: "single", smoking: false, nights: 3}
+booking.isAvailable(); // Error - isAvailable() does not exist..
+```
+This is because when declaring `class Res` the methods get defined on the _prototype_ `Res.prototype`
+```typescript
+console.log(Res.prototype);
+// {constructor: ƒ, isAvailable: ƒ}
+```
+
+## Interfaces
+TS 
