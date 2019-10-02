@@ -826,23 +826,24 @@ console.log(foo[1]); // {month: "Jan"}
 foo[2] = {day: "Wed"};
 // Error - the type of the value does not match {month: string}
 ```
-One _constraint_ with **index signature** is that if we define an _index signature_ property on an object type(or _class_ or _interface_), any other explict property defined should also have the same type - 
+One _constraint_ with **index signature** is that as soon as you have a string index signature, all explicit members must also conform to that index signature. The reason is that if we try to access the _explicit property_ using the _index string_ it coudl result in a different type. This would be an inconsistent type behaviour - 
 ```typescript
-// define the object type
 let foo: {
-    // using 'index signature'
-    [index: number]: {month: string};
+    [index: string]: number;
+    p1: number; // this is OK
+
+    p2: string  // Error - type string not assignable to number
 }
 
-// initailize foo
-foo = {};
+foo = {p1: 0};
+foo['a'] = 1;
 
-// assign property values
-foo[1] = {month: "Jan"};
-console.log(foo[1]); // {month: "Jan"}
+console.log(foo['a']); // 1
+console.log(foo['p1']); // 0
 
-foo[2] = {day: "Wed"};
-// Error - the type of the value does not match {month: string}
+// if we allowed 'p2: string' then
+console.log(foo['p2'])
+// -> would have to give back 'string' type!
 ```
 **Index signature** is useful for data structures such as an '_options bag'_, and we wnat to define a type (an _interface_ or _class_) for that. We wont know all the properties upfront but we know the type (if we don't we can use `any`).
 
