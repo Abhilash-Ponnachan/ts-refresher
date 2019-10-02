@@ -680,5 +680,170 @@ console.log(Res.prototype);
 // {constructor: ƒ, isAvailable: ƒ}
 ```
 
+## Structural Typing and objects
+When in comes to type-checking objects _TS_ takes an approach called _structural typing_ where the type is determined by the _'properties the object has'_, rather than the name of the type (a.k.a _nominal typing_). Languages such as _C#_ and _Java_ have nominal typing, so it is useful to look at a few examples to understand how _TS_ type checks objects -
+```typescript
+// define a variable 'z' with type as an object with 3 properties
+let z: {p1: string, p2: boolean, p3: number};
+
+// 'a' is an object literal with same 3 properties
+const a = {p1: "a", p2: false, p3: 34};
+z = a;
+// 'a' can be assigned to 'z'
+
+// 'b' has one more property 'p4'
+const b = {p1: "b", p2: true, p3: 23.3, p4: []};
+z = b;
+// 'b' assigned to 'z', extra property ignored
+// this has an excption though!
+
+const c = {a1: "c", a2: true, p3: 23.3};
+z = c;
+// Error - 'c' does not have 'p1' and 'p2'
+// property names have to be same
+
+const d = {p1: "d", p2: true};
+z = d;
+// Error - 'z' expects a property 'p3'
+```  
+As long as the value has all the propeties that the type expects the type check will pass.  
+When it comes to _extra properties_ it seems they are ignored. However there is a slight nuance to this called _excess property check_ - basically _TS_ does NOT allow _object literals_ with excess properties to be assigned to a type that does not have them, however it will allow an _object variable_ with excess properties to be assigned (this is what we see above with 'b'). We can see it more clearly in the exmple below -
+```typescript
+let z: {p1: string, p2: boolean, p3: number};
+
+z = {p1: 'b', p2: false, p3: 23, p4: []};
+// Error - object literal with extra property 'p4'
+
+const b = {p1: 'b', p2: false, p3: 23, p4: []};
+z = b;
+// OK - since variable 'b' is assignd to 'z'
+```
+If we have an _object literal_ with excess properties that we have to assign to a type that does not have them, or pass it as an argument to a function that has a parameter type that does not have those properties we can use _type assertion_ -
+```typescript
+let z: {p1: string, p2: boolean, p3: number};
+
+z = ({p1: 'b', p2: false, p3: 23, p4: []} as {p1: string, p2: boolean, p3: number});
+// Ok - object literal has been morphed to the target type
+```
+Of course at this point we have to step back and re-look at what we are trying to do. This example here is simply to demostrate the concept. When the _type_ of an object needs to be specified it would typically be a **class** or an **interface**.
+
+**Optional properties** - We can make properties optional by suffixing them with `?`-
+```typescript
+// object with 'p1', 'p2' and optional 'p3'
+let z: {p1: string, p2: boolean, p3?: number};
+
+const d = {p1: "d", p2: true};
+z = d;
+// 'p3' is optional so this is allowed
+```
+
+Another important concept of objects to be familiar with **index signature**. In _JS_ we can access an object's property using either the `.` notation or using `[key]` notation (_JS_ objects are hashmaps under the hood). 
+```javascript
+let foo = {p1: "Hello", p2: 23};
+// '.' access
+console.log(foo.p1); // Hello
+// index access
+console.log(foo['p2']); // 23
+```
+We can also specify properties on the fly - 
+```javascript
+let foo = {};
+foo.p1 = 'Hello';
+// index notation
+foo['p2'] = 23;
+```
+The _index key_ is expected to be `string` or `number` (it has to be something _JS_ can hash). _JS_ does not enforce the type of the index strictly, what it does however is implictly call `toString()` method on the _key_ to get a string value (if _key_ is a _number_ the runtime optimizes and uses the number). We can make this implicit call behaviour visible like so -
+```javascript
+let foo = {};
+
+const my_key = {
+    toString() {
+        console.log('called toString()!');
+        return 'my_key';
+    }
+};
+
+foo[my_key] = "Value 1";
+// prints - called toString()!
+```
+_TS_ on the other hand restricts the type of the _index key_ to be a `string`, `number` or `Symbol` -
+```typescript
+let foo: any = {};
+
+foo['p1'] = 'v1';
+// this is ok
+
+foo[0] = 'v2';
+// this is ok
+
+foo[false] = 'v3';
+// Error - 'false' cannot be used as an index type
+
+const my_key = {};
+foo[my_key] = 'v4';
+// Error - Type '{}' cannot be used as an index type
+```
+With **index signature** _TS_ gives us a mechanism to define a dynamic set of properties for an object. We do this using the syntax `[index: string]: type` - 
+```typescript
+// define the object type
+let foo: {
+    // using 'index signature'
+    [index: string]: string;
+}
+
+// initailize foo
+foo = {};
+
+// assign property values
+foo['a'] = "Alpha";
+foo['b'] = 'Beta';
+console.log(foo); // {a: "Alpha", b: "Beta"}
+console.log(foo.a); // Alpha
+```
+Note that in the syntax `index` is not a _keyword_, we can use any indentifier there -
+```typescript
+// define the object type
+let foo: {
+    // using 'index signature'
+    [some_random_text: string]: string;
+}
+```
+Whilst the _value_ can be any type, the _index type_ has to be one of `string`, `number` or `Symbol` (it has to be hashable).
+```typescript
+// define the object type
+let foo: {
+    // using 'index signature'
+    [index: number]: {month: string};
+}
+
+// initailize foo
+foo = {};
+
+// assign property values
+foo[1] = {month: "Jan"};
+console.log(foo[1]); // {month: "Jan"}
+
+foo[2] = {day: "Wed"};
+// Error - the type of the value does not match {month: string}
+```
+One _constraint_ with **index signature** is that if we define an _index signature_ property on an object type(or _class_ or _interface_), any other explict property defined should also have the same type - 
+```typescript
+// define the object type
+let foo: {
+    // using 'index signature'
+    [index: number]: {month: string};
+}
+
+// initailize foo
+foo = {};
+
+// assign property values
+foo[1] = {month: "Jan"};
+console.log(foo[1]); // {month: "Jan"}
+
+foo[2] = {day: "Wed"};
+// Error - the type of the value does not match {month: string}
+```
+**Index signature** is useful for data structures such as an '_options bag'_, and we wnat to define a type (an _interface_ or _class_) for that. We wont know all the properties upfront but we know the type (if we don't we can use `any`).
+
 ## Interfaces
-TS 
