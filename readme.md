@@ -681,6 +681,8 @@ console.log(Res.prototype);
 ```
 
 ## Structural Typing and objects
+
+#### Structrural Typing
 When in comes to type-checking objects _TS_ takes an approach called _structural typing_ where the type is determined by the _'properties the object has'_, rather than the name of the type (a.k.a _nominal typing_). Languages such as _C#_ and _Java_ have nominal typing, so it is useful to look at a few examples to understand how _TS_ type checks objects -
 ```typescript
 // define a variable 'z' with type as an object with 3 properties
@@ -707,6 +709,8 @@ z = d;
 // Error - 'z' expects a property 'p3'
 ```  
 As long as the value has all the propeties that the type expects the type check will pass.  
+
+#### Excess Property Check
 When it comes to _extra properties_ it seems they are ignored. However there is a slight nuance to this called _excess property check_ - basically _TS_ does NOT allow _object literals_ with excess properties to be assigned to a type that does not have them, however it will allow an _object variable_ with excess properties to be assigned (this is what we see above with 'b'). We can see it more clearly in the exmple below -
 ```typescript
 let z: {p1: string, p2: boolean, p3: number};
@@ -727,7 +731,8 @@ z = ({p1: 'b', p2: false, p3: 23, p4: []} as {p1: string, p2: boolean, p3: numbe
 ```
 Of course at this point we have to step back and re-look at what we are trying to do. This example here is simply to demostrate the concept. When the _type_ of an object needs to be specified it would typically be a **class** or an **interface**.
 
-**Optional properties** - We can make properties optional by suffixing them with `?`-
+#### Optional Properties
+We can make properties optional by suffixing them with `?`-
 ```typescript
 // object with 'p1', 'p2' and optional 'p3'
 let z: {p1: string, p2: boolean, p3?: number};
@@ -737,6 +742,42 @@ z = d;
 // 'p3' is optional so this is allowed
 ```
 
+#### Readonly Properties
+_Optional_ (`?`) is not the only _modifier_ we can apply to a property, we can make it **readonly** if we wish to ensure that it shouldn't be modified after an initail value is assigned.
+```typescript
+// specify a type with a property as readonly
+let foo: {p1: string; readonly p2: number};
+
+// we can assign instances to this variable now
+foo = {p1: 'a', p2: 23};
+
+// we can change the instance assigned to the variable
+// since we used 'let' and not 'const'
+foo = {p1: 'b', p2: 34};
+
+// we can modify the values of the normal property
+foo.p1 = 'c';
+
+// Error - cannot modify the value of readonly property
+foo.p2 = 56;
+```
+If we had used `const` then we would have had to initailize it along with the definition -
+```typescript
+// define and initalize
+const foo: {p1: string; readonly p2: number} =
+    {p1: 'a', p2:23};
+
+// Error - we cannot assign to constant
+foo = {p1: 'a', p2: 23};
+
+// we can modify the values of the normal property
+foo.p1 = 'c';
+
+// Error - cannot modify the value of readonly property
+foo.p2 = 56;
+```
+
+#### Index Signature
 Another important concept of objects to be familiar with **index signature**. In _JS_ we can access an object's property using either the `.` notation or using `[key]` notation (_JS_ objects are hashmaps under the hood). 
 ```javascript
 let foo = {p1: "Hello", p2: 23};
@@ -848,3 +889,76 @@ console.log(foo['p2'])
 **Index signature** is useful for data structures such as an '_options bag'_, and we wnat to define a type (an _interface_ or _class_) for that. We wont know all the properties upfront but we know the type (if we don't we can use `any`).
 
 ## Interfaces
+Till now we have defined an used complex types by their shape (members). In practice though we tend to give these types a name and we can do that using - **type aliases**, **classes** or **interfaces**. _TS_ **interfaces** are simialr to other programming languages such as _C#_ and _Java_, but supports some _additional concepts_. Let us take a look at  and how we can use them - 
+```typescript
+// define an interface 
+interface TaxCalculator{
+    readonly desc: string;
+    rate: number;
+    getTax(amt: number): number;
+}
+
+// decalre an object of that interface
+const salesTax: TaxCalculator = {
+    desc: "Sales Tax",
+    rate: 0.05,
+    getTax(amt: number): number{
+        return amt * this.rate;
+    }
+}
+
+console.log(salesTax.getTax(100));
+```
+Note how in _TS_ interfaces can have _properties_ as well as _methods_.  
+Also unlike other languages the object we assign to the something of this interface type does not have to implement the interface, it just needs to support the shape described by the interface (_strucural typing_) -
+```typescript
+// define an interface 
+interface TaxCalculator{
+    readonly desc: string;
+    rate: number;
+    getTax(amt: number): number;
+}
+
+// a function that uses this interface
+function getTotal(amt: number, calc: TaxCalculator): number {
+    return amt + calc.getTax(amt);
+}
+
+// salesTax has the shape of the interface
+// but it does not implement it
+const salesTax = {
+    desc: "Sales Tax",
+    rate: 0.05,
+    getTax(saleAmt: number): number{
+        return saleAmt * this.rate;
+    }
+}
+
+console.log(getTotal(100, salesTax)); // 105
+```
+Since an interface is effectively defining a name to the shape of an object, it supports all the simialr concepts we covered above with plain objects, such as  
+- **Excess property check (for literals)**
+- **Optional properties**
+- **Readonly properties**
+- **Index signature** -
+```typescript
+// define an interface 
+interface Rectangle{
+    length: number;
+    breadth: number
+}
+
+function getArea(rect: Rectangle){
+    return rect.length * rect.breadth;
+}
+
+// OK - objcet literal matches interface
+console.log(getArea({length: 2, breadth: 3})); // 6
+
+// Error - extra property 'height' does not match interface
+console.log(getArea({length: 2, breadth: 3, height: 4}));
+
+let r1 = {length: 2, breadth: 3, height: 4};
+// OK - assigning a variabel bypasses excess prop check
+console.log(getArea(r1)); // 6
+```
