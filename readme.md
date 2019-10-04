@@ -959,6 +959,117 @@ console.log(getArea({length: 2, breadth: 3})); // 6
 console.log(getArea({length: 2, breadth: 3, height: 4}));
 
 let r1 = {length: 2, breadth: 3, height: 4};
-// OK - assigning a variabel bypasses excess prop check
+// OK - assigning a variable bypasses excess prop check
 console.log(getArea(r1)); // 6
 ```
+Using an interface for an _'options bag'_ -
+```typescript
+interface ConfigItems {
+    name: string;
+    // index signature
+    [key: string]: string;
+}
+
+const envConfig: ConfigItems = {
+    name: "Env Config",
+    kernel: "Linux",
+    distro: "Debian",
+    version: "18.0.2"
+}
+
+function showEnv(config: ConfigItems) {
+    console.log(config);
+}
+
+// pass in our 'envConfig' object
+showEnv(envConfig);
+```
+#### Function Types
+In _TS_ _interfaces_ can describe a wide range of 'shapes', not just _objects_. We can use _interfaces_ to define _function types_. We specify the function signature as an interface and then use them to decalre varaibles or parameters of tha type. This is useful with _functional programming style_ -
+```typescript
+// define a function-type interface
+interface CalcTax{
+    // function signature
+    (amt: number, rate: number): number;
+}
+
+// a HOF that takes a 'calc' function as argument
+function calcTotal(amt: number, calc: CalcTax){
+    return amt + calc(amt, 0.05);
+}
+
+// 'lambda expression' as argumemnt for function-type
+console.log(calcTotal(100, (a, r) => a * r)); // 105
+```
+Note how the actual parameter names of the _function type_ does not matter, just the _function signature_.
+
+#### Indexable Types
+Just like we used an _interface_ to define a _function type_ (that we can invoke directly), we can define a type that we can directly _'index into'_.
+```typescript
+// define an indexable-type with number index
+interface SaleItems{
+    [index: number]: {sku: string, price: number};
+}
+
+// 'sales' is an indexable type
+let sales: SaleItems;
+
+// declare sales like an array
+sales = [
+    {sku: "lamp", price: 34.5 },
+    {sku: "cable", price: 10.0 },
+    {sku: "shade", price: 8.5 },
+    {sku: "switch", price: 15.0 }
+];
+
+console.log(sales[0]); // {sku: "lamp", price: 34.5}
+```
+Whilst this gives an _indexable type_ that looks like an array we cannot use `for .. of` (_iterator pattern_) with this, since it does not automatically implement an iterator. So if we try to do the following _TS_ will complain -
+```typescript
+// Error - Type 'SalesItem' does not have an iterator
+for (let s of sales) {
+    // ...
+}
+```
+The _'index type'_ can be either `string` or `number`. It is possible for an indexable type to combine these two together as well.  
+> However, the type of the _'number index'_ property should be a subtype of the _'string index'_ property.  
+
+This is because even when indexing with a _'number'_ _JS_ implicitly converts that into a _'string'_ and use that for the indexing. Therefore if a type has both _'number'_ and _'string'_ index types, when accessing the property it is effectively as if we are accessing with _'string'_, which imples that the type of the value returned should be the type/subtype of the _'string'_ indexed property -
+```typescript
+// define a class
+class Diode {
+    volts: number;
+    ampere: number;
+}
+
+// define a subclass
+class LED extends Diode {
+    lumen: number;
+}
+
+// indexable type of 'Diode/s'
+interface Board{
+    [index: number]: LED;
+    [key: string]: Diode;
+}
+// This is OK - Board[number] is subtype of Board[string]
+```
+However the below will fail -
+```typescript
+interface Board{
+    [index: number]: Diode;
+    [key: string]: LED;
+}
+// Error - Board[number] is not assignable to Board[string]
+```
+> Another subtle point is that if we specify _index signature_ with _'string index type'_, then the _'norma'_ ('non-indexed') properties should also have types that are same or assignable to the type of the _string indexed_ property. This is because in _JS_, properties which we can access as `obj.property` should also be accessible as `obj[property]` - 
+```typescript
+interface Board{
+    [key: string]: Diode;
+    indicator: LED; // Ok - LED <= Diode
+    Id: number; // Error - 'number' NOT assignable to 'Diode'
+}
+```
+Accessing `myBoard.Id` should be same as `myBoard['Id']`, and then teh latter becomes a _string indexing_ access for which the type specified is `Diode`. Therefore the type of `myBoard.Id` should be a subtype of `Diode`.
+
+#### Class Types
