@@ -1073,3 +1073,95 @@ interface Board{
 Accessing `myBoard.Id` should be same as `myBoard['Id']`, and then teh latter becomes a _string indexing_ access for which the type specified is `Diode`. Therefore the type of `myBoard.Id` should be a subtype of `Diode`.
 
 #### Class Types
+In established languages which were originally very Object-Oriented (such as _C#_, _C++_ and _Java_), the main use of _interfaces_ was to specify a public contract that for _calsses_. In _TS_ we can do the same - 
+```typescript
+// an interface for tax calculators
+interface TaxCal{
+    readonly desc: string;
+    rate: number;
+    calc(amt: number): number;
+}
+
+// class service tax
+class ServiceTax implements TaxCal{
+    desc: string = "Service Tax";
+    rate: number = 0.15;
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+
+
+// class sales tax
+class SalesTax implements TaxCal{
+    desc: string = "Sales Tax";
+    rate: number = 0.05;
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+
+// variable with 'TaxCalc' interface
+let taxCalc: TaxCal;
+
+// Sales tax instance
+taxCalc = new SalesTax();
+console.log(taxCalc.calc(100)); // 5
+
+taxCalc = new ServiceTax();
+console.log(taxCalc.calc(100)); // 15
+```
+One thing to note is that _interfaces_ in _TS_ can be used to specify only the _public_, _instance level_ contract of a class. We cannot use it to specify the _static_(_class level_) contracts such as _constructors_.  
+So in the above example if we make it a _'generic tax calculation'_ class that takes the _rate_ and _name_ as _constructor parameters_ we can modify it as - 
+```typescript
+/ an interface for tax calculators
+interface TaxCal{
+    readonly desc: string;
+    calc(amt: number): number;
+}
+
+// calss for general tax calculation
+class GeneralTax implements TaxCal{
+    desc: string;
+    private readonly rate: number;
+
+    // constructor to take 'desc' and 'rate' as arguments
+    constructor(desc: string, rate: number){
+        this.desc = desc;
+        this.rate = rate;
+    }
+
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+```
+In this case we specify a _'constructor'_ that can take the values to set for the properties.  
+This works fine, however as we can see the _interface_ does NOT enforce the _'constructor'_ itself and leaves it open. If we want the _interface_ to specify that the class should have a _'constructor'_, we could try adding a **construct signature** in the interface -
+```typescript
+interface TaxCal{
+    readonly desc: string;
+
+    // construct signature
+    new(desc: string, rate: number): TaxCal;
+
+    calc(amt: number): number;
+}
+
+// calss for general tax calculation
+class GeneralTax implements TaxCal{ // Error !!!
+    desc: string;
+    private readonly rate: number;
+
+    constructor(desc: string, rate: number){
+        this.desc = desc;
+        this.rate = rate;
+    }
+
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+```
+However now _TS_ will complain that the class `GeneralTax` does not implement the _Construct signature_!!. This is because _Construct signatures_ are a _static_(_class level_) operation and since _interfaces_ are for specifying _instance level_ members, classes canot implement them.  
+The patterns used in _TS_ for this are _'constructor function'_ or _'class expression'_ -
