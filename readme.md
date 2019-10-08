@@ -1163,5 +1163,86 @@ class GeneralTax implements TaxCal{ // Error !!!
     }
 }
 ```
-However now _TS_ will complain that the class `GeneralTax` does not implement the _Construct signature_!!. This is because _Construct signatures_ are a _static_(_class level_) operation and since _interfaces_ are for specifying _instance level_ members, classes canot implement them.  
-The patterns used in _TS_ for this are _'constructor function'_ or _'class expression'_ -
+However now _TS_ will complain that the class `GeneralTax` does not implement the _Construct signature_!!. This is because _construct signatures_ are a _static_(_class level_) operation and since _interfaces_ are for specifying _instance level_ members, classes canot implement them.  
+The patterns used in _TS_ for this are _'constructor function'_ or _'class expression'_.  
+
+In the above example we can move the _construct signature_ to a separate interface declaration, and then have a **constructor function** which uses that to create the class instances -
+```typescript
+// interface with construct signature
+interface TaxConstructor{
+    new(desc: string, rate: number): TaxCal;
+}
+
+// an interface for tax calculators
+interface TaxCal{
+    readonly desc: string;
+    calc(amt: number): number;
+}
+
+// calss for general tax calculation
+class GeneralTax implements TaxCal{
+    desc: string;
+    private readonly rate: number;
+
+    // has a constructor that has the shape of 'TaxConstructor'
+    constructor(desc: string, rate: number){
+        this.desc = desc;
+        this.rate = rate;
+    }
+
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+
+// constructor function - (factory)
+function createTax(ctor: TaxConstructor, desc: string, rate: number) {
+    return new ctor(desc, rate);
+}
+
+// use factory function to create instances
+const tax = createTax(GeneralTax, "Sales Tax", 0.05);
+
+console.log(tax.calc(100)); // 5
+```
+A few things to note about the above code -
+- The `createTax` factory function has a parameter that takes a _construct signature_ interface (`TaxConstructor`). 
+- The class `GeneralTax` itself has a _`constructor`_ which has the _"shape"_ of the `TaxConstructor` _construct signature_, though it does not (cannot) implement that interface itself. Because of this the `createTax` method can accept the **class** (`GeneralTax`) as an argument.  
+
+Instead of using a _factory function_ explicitly we can make the code a bit more terse by leveraging **class expression** -
+```typescript
+// interface with construct signature
+interface TaxConstructor{
+    new(desc: string, rate: number): TaxCal;
+}
+
+// an interface for tax calculators
+interface TaxCal{
+    readonly desc: string;
+    calc(amt: number): number;
+}
+
+// 'class expression'
+// identifier 'GenTax' of type interface with 'construct signature'
+const GenTax: TaxConstructor = class GeneralTax implements TaxCal{
+    desc: string;
+    private readonly rate: number;
+
+    constructor(desc: string, rate: number){
+        this.desc = desc;
+        this.rate = rate;
+    }
+
+    calc(amt: number): number{
+        return amt * this.rate;
+    }
+}
+
+// use the class expression identifier like a constructor
+const tax: TaxCal = new GenTax("Sales Tax", 0.05);
+
+console.log(tax.calc(100)); // 5
+```
+Here we simply reframed the _class declaration_ as a _class expression_ with an identifier `GenTax` that we can treat like we would a class. `genTax` has the shape of `TacConstructor`, and we can use it like we would a _class name_.
+
+#### Extending Interfaces
