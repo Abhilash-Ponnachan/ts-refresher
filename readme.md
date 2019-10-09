@@ -1073,7 +1073,7 @@ interface Board{
 Accessing `myBoard.Id` should be same as `myBoard['Id']`, and then teh latter becomes a _string indexing_ access for which the type specified is `Diode`. Therefore the type of `myBoard.Id` should be a subtype of `Diode`.
 
 #### Class Types
-In established languages which were originally very Object-Oriented (such as _C#_, _C++_ and _Java_), the main use of _interfaces_ was to specify a public contract that for _calsses_. In _TS_ we can do the same - 
+Till now we have used _interfaces_ as a type definnition for teh _shape_ of something (an objcet, or functio, or indexable collection), we have not used it as a contract for _implementing_ a _class_. In established languages which were originally very Object-Oriented (such as _C#_, _C++_ and _Java_), the main use of _interfaces_ was to specify a public contract that for _calsses_. In _TS_ we can do the same - 
 ```typescript
 // an interface for tax calculators
 interface TaxCal{
@@ -1243,6 +1243,151 @@ const tax: TaxCal = new GenTax("Sales Tax", 0.05);
 
 console.log(tax.calc(100)); // 5
 ```
-Here we simply reframed the _class declaration_ as a _class expression_ with an identifier `GenTax` that we can treat like we would a class. `genTax` has the shape of `TacConstructor`, and we can use it like we would a _class name_.
+Here we simply reframed the _class declaration_ as a _class expression_ with an identifier `GenTax` that we can treat like we would a class. `genTax` has the shape of `TaxConstructor`, and we can use it like we would a _class name_.
 
 #### Extending Interfaces
+Like _classes_, _interfaces_ can extend other _interfaces_. The resultant _interface_ would _inherit_ the _member definitions_ of the parent. 
+```typescript
+// base type for UI controls
+interface UIControl{
+    id: string;
+    visible: boolean;
+}
+
+// type for textbox control
+interface UITextBox extends UIControl{
+    text: string;
+}
+```
+Using this _inerface hierarchy_ to type variables can be slightly different from traditional _class based_ object-oriented languages. In _TS_ we can use these _interfaces_ as object types and if we try to assign an object with the _shape_ of the _child interface_ to a variable of the _parent interface type_ it will give an error (since that is an _excess property_) - 
+```typescript
+// variable of type parent interface
+let txtCtrl: UIControl;
+
+// assigning an 'object' of child interface -
+// to a parent interface variable will NOT work
+txtCtrl = {
+    id: "txtBox1",
+    visible: true,
+    text: "lorum ipsum";   // Error - this property does not exist on UIControl
+}
+```
+However with _classes_ it will follow the familiar object-oriented behaviour -
+```typescript
+class TextBox implements UITextBox{
+    readonly id: string;
+    visible: boolean;
+    text: string;
+
+    constructor(id: string, text: string) {
+        this.id = id;
+        this.visible = true;
+        this.text = text;
+    }
+}
+
+// instance of a class that implements the child interface WILL work
+txtCtrl = new TextBox("txtBox2", "lorum ipsum");
+```
+An instance of a _class_ that implements the _child interface_ can be asigned to a varaible of the _parent interface type_.
+```typescript
+// however we cannot access the child interface properties
+console.log(txtCtrl.text); //Error - property 'text' does not exist on UIControl
+```
+Of course we cannot access the property(member) of the _child interface_ using the _parebt interface type_ variable. To do that we would have to _'type assert'_ it into the desired type -
+```typescript
+// we can use 'type assertion' to access the 'text' property
+console.log((txtCtrl as UITextBox).text);
+```
+
+#### Hybrid Types
+As we have seen in _TS_ _interfaces_ have the ability to describe a variety of types and shapes. It quite naturally flows to have _hybrid types_ that are a combination of what we have seen above - 
+```typescript
+// hybrid type interface - defiines
+// a function and object composite
+interface Counter{
+    (): number; // funtion => returns a count value
+    interval: number; // property for interval
+    reset(): void; // method to reset
+}
+
+// a factory function to create our object
+function getCounter(start: number = 1, interval: number = 1): Counter{
+    const fn: Counter = function () { 
+        let val = start;    // Closure over outer variable/param 'start'
+        start++;
+        return val;
+    };
+    let initVal = start;
+    fn.interval = interval;
+    fn.reset = function () {
+        start = initVal;  // Closure over outer varaible 'initVal'
+    }
+    return fn;  // return closure
+}
+
+const c1 = getCounter(10);
+// invoking 'c1' as a plain function
+console.log(c1());  // 10
+console.log(c1());  // 11
+console.log(c1());  // 12
+// calling  a 'method' on 'c1'
+c1.reset();         // resets to 'initVal'
+console.log(c1());  // 10
+```
+In the example above we have an interface with:
+- a call signature `(): number`
+- a property `interval: number`
+- a method `reset(): void`
+With a value of this type we should be able to use it like a _function_ as well as an _object_ as shown with the call to `c1()` and `c1.reset()` respectively.
+> An interesting thing to note about the factory-function `getCounter` is how we make use of **closure** over function variables to handle state. This is a common pattern in _JS_ and in functional programming styles. 
+
+#### Interfaces Extending Classes
+In _TS_ _interfaces_ can not only extend(inherit) from other _interfaces_ but also from _classes_. An _interface_ that extends a _class_ will inherit all the members of the _class_ without the implementation. It will also inherit all _private_ and _protected_ members! - 
+```typescript
+class UIControl{
+    private id: string;
+    visbile: boolean;
+
+    constructor(id: string, visible = true) {
+        this.id = id;
+        this.visbile = visible;
+    }
+}
+
+// interface extending the class 'UIControl'
+interface SelectableControl extends UIControl {
+    select(): boolean;
+}
+```
+Now `SelectableControl` will have all the members of `UIControl` plus the method `select(): boolean`. Since it inherits _private_ members as well, there is an interesting result that _only subcalsses of the parent class (from which the interafce extends) can implement the interface_. So if we try the below, it will not work -
+```typescript
+// a class trying to implement 'SelectableControl'
+class TextLabel implements SelectableControl{
+    private id: string; // this will conflict with inherited property 'id'
+    visbile: boolean;
+
+    constructor(id: string, visible = true) {
+        this.id = id;
+        this.visbile = visible;
+    }
+
+    select() : boolean {
+        return true;
+    }
+}
+// ERROR - class 'Textlabel' incorrectly impelemnts interface `SelectableControl`
+// types have separate declarations of private property 'id'
+```
+To make this work we can make the `TextLabel` extend from `UIControl` AND `implement` our _interface_ -
+```typescript
+// a class base-class and implement 'SelectableControl'
+class TextLabel extends UIControl implements SelectableControl{
+    select() : boolean {
+        return true;
+    }
+}
+```
+Such situations arise when there are big inheritance hierarchies and we wish to enforce some constraints. Though if we reach such situations it is probably a code-smell prompting us to relook our class design.
+
+## Classes
