@@ -1391,3 +1391,6 @@ class TextLabel extends UIControl implements SelectableControl{
 Such situations arise when there are big inheritance hierarchies and we wish to enforce some constraints. Though if we reach such situations it is probably a code-smell prompting us to relook our class design.
 
 ## Classes
+_JS_ provides a _Prototype_ based _Object Oriented_ model as opposed to the more familiar _Class_ based _Object Oriented_ model provided languages _OOP_ languages such as _C# and Java_.  
+From _ES6_ onwards we have support for the _Class_ based semantics for _OOP_ in _JS_.  
+_TS_ makes this capability available now to developers and be compiled down to _JS_ versios supported on all major browsers. _TS_ Classes are first-class types in _TS_ that can be combined or handled just like any other type in _TS_.
