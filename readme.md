@@ -1474,3 +1474,60 @@ Now the **object literal** demostrates the method described in the **class** `Gr
 This shows that the **class synatx** is a layer over the underlying **pototypal object model** of _JS_.
 
 ### Constructor Function
+In _TS_ when we decalre a class it results in two declarations -
+
+- A **type** for the instances of the class. In our example it is the type `Greeter`. This is used by _TS_ at development and compile time.
+
+- Also a **constructor function** which is what gets called when we create instances with `new`.
+
+The **constructor function** follows the calssical _JS_ techniques (such as `prototype`, `this`, and `IIFE`) for encapsulation giving the effect of classes -
+```typescript
+// 'Greeter' gets assigned as 'constructor' function by IIFE
+let Greeter = (function () {
+  function GreeterCon(greeting) {
+    this.greeting = greeting;
+  }
+
+  // attach method to prototype
+  GreeterCon.prototype.greet = function (person) {
+    console.log(`${this.greeting} ${person}`);
+  }
+
+  // return the inner function 
+  // this is the actual 'constructor' function
+  return GreeterCon;
+})();
+
+// create instances using 'Greeter`
+const grtr_en = new Greeter('Hello');
+grtr_en.greet('Alan'); // Hello Alan
+```
+With the `let Greeter = ...` statement (with a _IIFE_ on the _RHS_) it gets assigned as the **constructor function**. We then use `new` on that to get instances we get objects 
+```typescript
+console.log(grtr_en.constructor.name); // GreeterCon
+```
+We can see that the **constructor** of the object is `GreeterCon`, the function we defined inside the IIFE.  
+```typescript
+console.log(Object.getPrototypeOf(grtr_en) === Greeter.prototype); // true
+```
+And the **prototype** of the **constructor function** is the **prototype** of the object instance.  
+If we use a **class declartion** instead of the explicit **constructor function** declaration we used with _JS_, we will get the same result for the **prototype** -
+```typescript
+class Greeter{
+  
+  greeting: string; 
+  
+  constructor(greeting: string) {
+    this.greeting = greeting;
+  }
+  
+  greet(person: string) {
+    console.log(`${this.greeting} ${person}`);
+  }
+}
+
+const grtr_en = new Greeter('Hello');
+
+console.log(Object.getPrototypeOf(grtr_en) === Greeter.prototype); // true
+```
+### Static Members
