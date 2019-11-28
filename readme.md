@@ -1393,4 +1393,84 @@ Such situations arise when there are big inheritance hierarchies and we wish to 
 ## Classes
 _JS_ provides a _Prototype_ based _Object Oriented_ model as opposed to the more familiar _Class_ based _Object Oriented_ model provided languages _OOP_ languages such as _C# and Java_.  
 From _ES6_ onwards we have support for the _Class_ based semantics for _OOP_ in _JS_.  
-_TS_ makes this capability available now to developers and be compiled down to _JS_ versios supported on all major browsers. _TS_ Classes are first-class types in _TS_ that can be combined or handled just like any other type in _TS_.
+_TS_ makes this capability available now to developers and be compiled down to _JS_ versios supported on all major browsers. _TS_ Classes are first-class types in _TS_ that can be combined or handled just like any other type in _TS_.  
+Declaring, instantiating and using a class is very similar to other OOP languages such as _C#_ and _Java_ - 
+```typescript
+// define and declare a class 'Greeter'
+class Greeter{
+  // property
+  greeting: string; 
+  // constructor function
+  constructor(greeting: string) {
+    this.greeting = greeting;
+  }
+  // method
+  greet(person: string) {
+    console.log(`${this.greeting} ${person}`);
+  }
+}
+
+// instantiate objects of the class
+const grtr_en = new Greeter('Hello');
+const grtr_es = new Greeter('Hola');
+
+// access it members
+grtr_en.greet('Alan'); // Hello Alan
+grtr_es.greet('Bob'); // Hola Bob
+```
+Whilst the syntax is similar to other langauges, there are subtle differences under the hood. The **class syntax** in _TS_ (and _ES6_) is really an abstraction over the underlying **prototype based object model**.  
+The code snippet below demonstrates how this fits into the original _JS_ object model -
+```typescript
+// define a regular JS object
+const maybe_grtr = {
+  greeting: 'Bonjour',
+  greet() { 
+    console.log('blah.. blah..');
+  }
+};
+
+// assign the object literal to an object of type 'Greeter'
+const grtr_shp: Greeter = maybe_grtr;
+// this works because of 'structural-typing'
+
+// grtr_shp.greet(); // Error - the method expects 1 parameter
+
+// let us pass some argument
+grtr_shp.greet('Claire'); // blah.. blah..
+// since at runtime it calls the method on the object
+
+// let us try to set the prototype of 'grtr_en'
+// as prototype of 'grtr_shp'
+Object.setPrototypeOf(grtr_shp, Object.getPrototypeOf(grtr_en));
+grtr_shp.greet('Claire'); // blah.. blah..
+// still same, since the object has its own 'greet()' method
+
+// let us delete that property from object
+delete grtr_shp.greet;
+
+grtr_shp.greet('Claire'); // Bonjour Claire
+// now it calls the method 'greet' defined in the 'Greeter' class
+```
+- We see that we can assign an **object literal** to a variable of the type `Greeter`. This is possible becuase _TS_ follows **structural typing** (as opposed to **nominal typing**). As long as the object has the same **"shape"** as the type it is considered same type.  
+_It is interesting to note that the `greet()` method in the object literal did not have any parameters whilst the `greet(person; string)` menthod in the `Greeter` class has a parameter. However it was still accepted_.
+
+- If we try to invoke the method as it is in the object literal (`grtr_shp.greet()`), _TS_ will complain because it uses the type definition to do the check and as per teh type (`Greeter`) the method takes a `string` parameter. This type-check is a compile time behaviour.
+
+- However if we invoked the method with a string argument (`grtr_shp.greet('Claire')`), we get the behaviour of the **object literal** and not that defined in the class. This is because at runtime it is plain old _JS_ and will result in a call to the method of the **object literal** and has nothing to do with the **class definition**.
+
+- We can now try to get the behaviour defined in the class by _setting the **prototype**_ of our object literal explicitly, and then invoking the method - 
+```typescript
+Object.setPrototypeOf(grtr_shp, Object.getPrototypeOf(grtr_en));
+grtr_shp.greet('Claire'); // blah.. blah..
+```
+However this dosen't work just yet becuase the **object literal** has its own member `greet()` and so _JS_ wont look up the _prototype chain_. 
+
+- To make this work we can simply delete the original method from the object itself, and then try calling the method -
+```typescript
+delete grtr_shp.greet;
+grtr_shp.greet('Claire'); // Bonjour Claire
+```
+Now the **object literal** demostrates the method described in the **class** `Greeter`.  
+This shows that the **class synatx** is a layer over the underlying **pototypal object model** of _JS_.
+
+### Constructor Function
