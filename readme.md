@@ -1530,4 +1530,211 @@ const grtr_en = new Greeter('Hello');
 
 console.log(Object.getPrototypeOf(grtr_en) === Greeter.prototype); // true
 ```
-### Static Members
+### Inheritance
+Like other standard _class based OOP_ languages _TS_ supports etending classes via inheritance -
+```typescript
+// base calss 'Person'
+class Person{
+  firstName: string;
+  lastName: string;
+
+  constructor(firstName: string, lastName: string) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+
+  fullname() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  greet() {
+    return `Hello my name is ${this.fullname()}`;
+  }
+}
+
+// derived class 'Employee'
+class Employee extends Person{
+  empID: number;
+
+  constructor(firstName: string, lastName: string, empID: number) {
+    // initialize parent class
+    super(firstName, lastName);
+    this.empID = empID;
+  }
+
+  // override parent class method
+  greet() { 
+    return `Hello, my employee ID is ${this.empID}`;
+  }
+}
+
+// instance of parent class
+const alan = new Person('Alan', 'Turing');
+console.log(alan.greet()); // Hello my name is Alan Turing
+
+// instance of derived class
+const alonzo = new Employee('Alonzo', 'Church', 1001);
+console.log(alonzo.greet()); // Hello, my employee ID is 1001
+
+console.log(alonzo.fullname()); // Alonzo Church
+```
+_TS_ (and _ES6_) uses the `extends` keyword (same as _Java_) for a base class to inherit from a parent class. The code snippet above demonstrates how _TS_ syntax provides the experince of _class based inheritance_ -  
+- Use the `extends` keyword for class `Employee` to inhertit from class `Person`
+- Use `super(...)` within base class constructor to invoke base class constructor. In fact if we do not do this _TS_ will force us with an error - _'derived class constructor must have a call to super()..'_. This must be done before can access any property on `this`!
+- The derived class overrides the `greet()` method to change the behaviour.
+- Derived class inherits the members of the base parent class.  
+Whilst this is taken for granted in traditional _class based OOP_ languages, it is differenrt from the patterns and techniques traditionally used in _JS_.
+
+Even though the syntax gives a _class based inheritance_ feel, the underlying mechanism at runtime is still _protype based inheritance_. Like `class`, the `extends` syntax too is an abstraction over the _protype chain_. If we set the `target` of _TS_ as _ES5_ we can see the traditional _JS_ code that gets generated, which gives us an idea of what is going on - 
+
+```typescript
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+// base calss 'Person'
+var Person = /** @class */ (function () {
+    function Person() {
+    }
+    return Person;
+}());
+// derived class 'Employee'
+var Employee = /** @class */ (function (_super) {
+    __extends(Employee, _super);
+    function Employee() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return Employee;
+}(Person));
+```
+Whilst there is a lot of boiler-plate code auto generated, the bits to take away for us are -
+```typescript
+// derived class 'Employee'
+var Employee = /** @class */ (function (_super) {
+    __extends(Employee, _super); // defined below 
+    function Employee() {
+        // invoking super class constructor function
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return Employee;
+}(Person));
+
+// ...
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        ///...
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        // setting up the constructor
+        function __() { this.constructor = d; }
+        // setting up prototype of chain fro base class
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+```
+Alll that code,  does a number of things behind the scene including -
+- Sets up the **constructor** of the derived classs
+- Wires up the **prototype** chain for the derived class
+- Invokes the base class **constuctor function**
+
+Of course all this _ES5_ code for **constructor** and **prototype** wiring is not really important to us from a regular usage perspective. However to be an effective _TS_ programmer, we have to be cognizant of the fact that despite all the syntatic abstractions of _class based inheritance_, at runtime it is still _prototype based_ under the hood!
+
+### Access Specifier
+For our illustrative examples above we let the class members be accessible across the code. In practice however if we have leaky encapsulations, it would defeat the purpose of OOP. Common OOP langauges provide **access specifier/modifier** before the member to control visibility to it. _TS_ provides the same familiar **access specifiers** -
+- `private` - Members are only accessible within the same class. _Note that derived classes share the private members for structure/shape, but cannot access them._
+- `protected` - Similar to `private` but can be accessed from _derived_ classes (but not from outside).
+- `public` - Can be accessed from outside the class as well. This is the _default_ access specifier in _TS_ if nothing is specified.
+
+In our example we woudl make the fields of the base class `private` -
+```typescript
+class Person{
+  private firstName: string;
+  private lastName: string;
+
+  //...
+}
+```
+We would be able to access it within `Person` class.  
+However if we needed to modiy the derived class `Employee` to access say the `firstName` then we would have to make it `protected` -
+```typescript
+class Person{
+  protected firstName: string;
+  private lastName: string;
+
+  // ...
+}
+
+class Employee extends Person{
+  // ...
+
+  // override parent class method
+  greet() { 
+    return `Hello, I am ${this.firstName} and my employee ID is ${this.empID}`;
+  }
+}
+```
+One interesting side effect that **access modifiers** has is on the equivalence of types. As we have seen previously _TS_ (and _JS_) has **structural typing** which means that if two types have all their members equivalent then the types themselves are equivalent regardless their named type hierarchy. However with `private` and `protected` members this behaviour changes, in that `private` and `protected` members are not considered equivalent even if the share the same name and type. This is better explained with an exmaple -
+```typescript
+class Person {
+  private name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+class Emplyee extends Person {
+  private id: number;
+
+  constructor(name: string, id: number) {
+    super(name);
+    this.id = id;
+  }
+}
+
+// class 'Asset' has the same "shape" as 'Person'
+class Asset {
+  private name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+let obj: Person;
+obj = new Emplyee('John', 1001);
+
+obj = new Asset('printer');
+// Error - Type 'Asset' is not assignable to type 'Person'.
+//  Types have separate declarations of a private property 
+```
+Classes `Person` and `Asset` seem to have the same shape however they are not equivalent, therefore not assignable. The error message given by _TS_ is explains this clearly - _'types have separate declarations of private property'_
+
+#### Protected Constructors
+We can use `protected` modifier on **constructors** as well, which means they can be accessed from derived classes but cannot be used to from outside the calls, which means they cannot be instantiated. Whislt this may seem superflous this can be useful for declaring **abstract classes** to define common behaviour that we wish to inherit but do not want the base class to be instatiated itself.
+
+#### Readonly Modifier
+TO_DO
+
+#### Parameter Properties
+Also called **constructor initialization pattern** .. TO_DO
+
+#### Property Accessors
+TO_DO
+
+
+#### Static Members
+
+#### Abstract Classes
+
+#### Class as Interface
