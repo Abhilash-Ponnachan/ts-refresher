@@ -1722,19 +1722,138 @@ Classes `Person` and `Asset` seem to have the same shape however they are not eq
 
 #### Protected Constructors
 We can use `protected` modifier on **constructors** as well, which means they can be accessed from derived classes but cannot be used to from outside the calls, which means they cannot be instantiated. Whislt this may seem superflous this can be useful for declaring **abstract classes** to define common behaviour that we wish to inherit but do not want the base class to be instatiated itself.
+```typescript
+type TransportMode = 'Road' | 'Rail' | 'Air' | 'Water';
 
+abstract class Vehicle{
+  private modeOfTransport: TransportMode;
+  protected constructor(modeOfTransport: TransportMode) {
+    this.modeOfTransport = modeOfTransport;
+  }
+}
+
+const veh = new Vehicle('Road');
+// Error - protected constructor is not accessible outside the class definition
+
+class Car extends Vehicle{
+  make: string;
+  constructor(make: string) {
+    super('Road');  // call protected 'Vehicle' constructor from child class
+    this.make = make;
+  }
+}
+
+const gt40 = new Car('Ford');
+```
 #### Readonly Modifier
-TO_DO
+Properties can be marked as `readonly`, which means they can't be modified. It also means they have to be _initialized_ when _declared_ OR in the _constructor_. In our _car example_ above we could make the `modeOfTransport` proeprty readonly (as once it is set, it is not likely to change) -
+```typescript
+abstract class Vehicle{
+  private readonly modeOfTransport: TransportMode;
+  protected constructor(modeOfTransport: TransportMode) {
+    this.modeOfTransport = modeOfTransport;
+  }
+}
+```
 
 #### Parameter Properties
-Also called **constructor initialization pattern** .. TO_DO
+Also called **constructor initialization pattern**. A common pattern we see with poperties is to _dcelare_ them first, then have them initialized in the _constructor_ with values passed in as _parameters_. _TS_ provides a shortcut syntax to do this in one go - 
+```typescript
+abstract class Vehicle{
+  protected constructor(private modeOfTransport: TransportMode) {}
+}
+
+class Car extends Vehicle{
+  constructor(public make: string) { // parameter property 'make'
+    super('Road');    
+  }
+}
+
+const gt40 = new Car('Ford');
+console.log(gt40.make); // Ford
+```
+When we perfix _constructor parameters_ with _access modifiers_ (`public`, `private`, `protected`) or `readonly` we have consolidated the _declaration_ and _initialization_ in one place. 
 
 #### Property Accessors
-TO_DO
+We can intercept property access by specfiying _getter_ and _setter_ accessors on them. We can have code in these _property accessors_ for additional handling as we interecpt them -
+```typescript
+class Account{
+  // backing field for property
+  _amount: number = 0;
 
+  constructor(readonly accNumber: string) { }
+
+  // getter for property
+  get amount(): number{
+    console.log(`accessed amount = ${this._amount}`);
+    return this._amount;
+  }
+
+  // setter for property
+  set amount(value: number) {
+    if (value < 0) {
+      throw new Error('amount cannot be less than zero!');
+    }
+    else {
+      this._amount = value;
+    }
+  }
+
+}
+
+const myAccount = new Account('SW12345678R');
+
+myAccount.amount = 200;
+
+console.log(myAccount.amount);
+// accessed amount = 200 (from get())
+// 200
+
+myAccount.amount = -1;
+// Uncaught Error - amount cannot be less that zero!
+```
+Property _getters_ and _setters_ are common in languages such as _C#_.  
+In the above example we used an explicit backing field `_amount` for the property. It is possible to use _parameter properties_ with _getter_ and _setter_ so that we do not have to write them explicitly. All we have to do is change the _constructor_ to have an extra quialified _parameter_ with a defualt value for our case - 
+```typescript
+class Account{
+  constructor(readonly accNumber: string, public _amount: number = 0) { }
+
+  // .. everything else is the same
+
+}
+```
 
 #### Static Members
+Classes can have members that are at the class level instead of at the instead level. We do this using `static` keyword just like _C#_ -
+```typescript
+class Widget{
+  static count: number = 0;
+
+  constructor(readonly widgetId: string) {
+    Widget.count++; // class level attribute 'count' updated
+  }
+}
+
+const w1 = new Widget('x001');
+const w2 = new Widget('x002');
+const w3 = new Widget('x003');
+
+console.log(Widget.count); // 3
+// class level attribute 'count' 
+```
+It is interesting to see how `static` members are handled at the _JS_ level within the **constructor function** -
+```typescript
+var Widget = /** @class */ (function () {
+    function Widget(widgetId) {
+        this.widgetId = widgetId; // instance attribute on 'this'
+        Widget.count++;
+    }
+    Widget.count = 0; // class level attribute on function 'Widget'
+    return Widget;
+}());
+```
 
 #### Abstract Classes
+
 
 #### Class as Interface
