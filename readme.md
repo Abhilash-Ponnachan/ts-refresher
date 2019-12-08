@@ -1854,6 +1854,32 @@ var Widget = /** @class */ (function () {
 ```
 
 #### Abstract Classes
+Abstract classes are used to define templates for concrete calsses that derive from them. They form the top of a class hierarchy. The key concepts of abstract classes are as follows -
+- We declare classes as abstract using the `abstract` keyword.
+- They cannot be instantiated.
+- Unlike _interfaces_ they can contain 'concrete' methods, typically providing helper methods or blueprints for derived classes to override.
+- Generally they would have `abstract` methods to be implemented by dervived classes.
+- Whilst _interface methods_ are always public, _abstract methods_ can have access specifiers.  
+All thare are standard concepts in common OOP languges.
+```typescript
+// abstract class to represent a stream of some source
+abstract class Stream{
+  abstract open(uri: string): void;
+}
 
+// concrete class to read from file
+class FileStream extends Stream{
+  open(uri: string): void{
+    console.log(`Opening file ${uri}`);
+  }
+}
+
+//const strm = new Stream();
+// Error - cannot create instance of abstract class
+
+const strm = new FileStream();
+strm.open('./myFile.txt');
+```
+Whilst abstract classes are useful for designing class hierarchies, one pitfall is that it can lead devlopers to create complex hierarchies that become bloated and difficult to manage or extend. A best-practice to keep in mind is to prefer **composition over inheritance** in general. 
 
 #### Class as Interface
