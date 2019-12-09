@@ -1883,3 +1883,48 @@ strm.open('./myFile.txt');
 Whilst abstract classes are useful for designing class hierarchies, one pitfall is that it can lead devlopers to create complex hierarchies that become bloated and difficult to manage or extend. A best-practice to keep in mind is to prefer **composition over inheritance** in general. 
 
 #### Class as Interface
+As we know a class declaration creates -
+- a type to represent the instances
+- a constructor function that creates the instances, and sets up the prototype chain
+
+Since _TS_ is structurally typed we can use the class type where an interface of the **same shape** is accepted -
+```typescript
+// class for person
+class Person{
+  constructor(readonly greeting: string) { }
+  greet(name: string) {
+    console.log(`${this.greeting} ${name}`);
+  }
+}
+
+// interface for a greeter
+interface Greeter{
+  readonly greeting: string;
+  greet(name: string): void;
+}
+
+// variable of type instance
+let grtr_en: Greeter;
+
+// assign instance of un related class
+grtr_en = new Person('Hello');
+
+grtr_en.greet('Alan'); // Hello Alan
+```
+
+What is more interesting is that _interfaces_ can even inherit from _class_ types -
+```typescript
+// class for person
+class Person{
+  constructor(readonly greeting: string) { }
+  greet(name: string) {
+    console.log(`${this.greeting} ${name}`);
+  }
+}
+
+// interface extending from class!
+interface Concierge extends Person{
+  checkAvailability(from: Date, to: Date): boolean;
+}
+```
+Of course this can a bit confusing to the purpose of _classes_ and _interfaces_ and should try not to mix up the intent. They can be useful when we are _extending_ someone else's library and we are not in control of that code.
