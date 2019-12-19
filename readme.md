@@ -1070,10 +1070,10 @@ interface Board{
     Id: number; // Error - 'number' NOT assignable to 'Diode'
 }
 ```
-Accessing `myBoard.Id` should be same as `myBoard['Id']`, and then teh latter becomes a _string indexing_ access for which the type specified is `Diode`. Therefore the type of `myBoard.Id` should be a subtype of `Diode`.
+Accessing `myBoard.Id` should be same as `myBoard['Id']`, and then the latter becomes a _string indexing_ access for which the type specified is `Diode`. Therefore the type of `myBoard.Id` should be a subtype of `Diode`.
 
 #### Class Types
-Till now we have used _interfaces_ as a type definnition for teh _shape_ of something (an objcet, or functio, or indexable collection), we have not used it as a contract for _implementing_ a _class_. In established languages which were originally very Object-Oriented (such as _C#_, _C++_ and _Java_), the main use of _interfaces_ was to specify a public contract that for _calsses_. In _TS_ we can do the same - 
+Till now we have used _interfaces_ as a type definnition for the _shape_ of something (an objcet, or functio, or indexable collection), we have not used it as a contract for _implementing_ a _class_. In established languages which were originally very Object-Oriented (such as _C#_, _C++_ and _Java_), the main use of _interfaces_ was to specify a public contract that for _calsses_. In _TS_ we can do the same - 
 ```typescript
 // an interface for tax calculators
 interface TaxCal{
@@ -1114,7 +1114,7 @@ console.log(taxCalc.calc(100)); // 15
 One thing to note is that _interfaces_ in _TS_ can be used to specify only the _public_, _instance level_ contract of a class. We cannot use it to specify the _static_(_class level_) contracts such as _constructors_.  
 So in the above example if we make it a _'generic tax calculation'_ class that takes the _rate_ and _name_ as _constructor parameters_ we can modify it as - 
 ```typescript
-/ an interface for tax calculators
+// an interface for tax calculators
 interface TaxCal{
     readonly desc: string;
     calc(amt: number): number;
@@ -1137,6 +1137,7 @@ class GeneralTax implements TaxCal{
 }
 ```
 In this case we specify a _'constructor'_ that can take the values to set for the properties.  
+##### Construct Signatures
 This works fine, however as we can see the _interface_ does NOT enforce the _'constructor'_ itself and leaves it open. If we want the _interface_ to specify that the class should have a _'constructor'_, we could try adding a **construct signature** in the interface -
 ```typescript
 interface TaxCal{
@@ -1163,8 +1164,11 @@ class GeneralTax implements TaxCal{ // Error !!!
     }
 }
 ```
-However now _TS_ will complain that the class `GeneralTax` does not implement the _Construct signature_!!. This is because _construct signatures_ are a _static_(_class level_) operation and since _interfaces_ are for specifying _instance level_ members, classes canot implement them.  
-The patterns used in _TS_ for this are _'constructor function'_ or _'class expression'_.  
+However now _TS_ will complain that the class `GeneralTax` does not implement the _Construct signature_!!.  
+This is because **construct signatures** are a **static(_class level_) operation** and since _interfaces_ are for specifying _instance level_ members, classes canot implement them.
+
+##### Constructor Functions & Class expressions
+The patterns used in _TS_ for this are **'constructor function'** and **'class expression'**.  
 
 In the above example we can move the _construct signature_ to a separate interface declaration, and then have a **constructor function** which uses that to create the class instances -
 ```typescript
@@ -1454,7 +1458,7 @@ grtr_shp.greet('Claire'); // Bonjour Claire
 - We see that we can assign an **object literal** to a variable of the type `Greeter`. This is possible becuase _TS_ follows **structural typing** (as opposed to **nominal typing**). As long as the object has the same **"shape"** as the type it is considered same type.  
 _It is interesting to note that the `greet()` method in the object literal did not have any parameters whilst the `greet(person; string)` menthod in the `Greeter` class has a parameter. However it was still accepted_.
 
-- If we try to invoke the method as it is in the object literal (`grtr_shp.greet()`), _TS_ will complain because it uses the type definition to do the check and as per teh type (`Greeter`) the method takes a `string` parameter. This type-check is a compile time behaviour.
+- If we try to invoke the method as it is in the object literal (`grtr_shp.greet()`), _TS_ will complain because it uses the type definition to do the check and as per the type (`Greeter`) the method takes a `string` parameter. This type-check is a compile time behaviour.
 
 - However if we invoked the method with a string argument (`grtr_shp.greet('Claire')`), we get the behaviour of the **object literal** and not that defined in the class. This is because at runtime it is plain old _JS_ and will result in a call to the method of the **object literal** and has nothing to do with the **class definition**.
 
@@ -1649,6 +1653,42 @@ Alll that code,  does a number of things behind the scene including -
 
 Of course all this _ES5_ code for **constructor** and **prototype** wiring is not really important to us from a regular usage perspective. However to be an effective _TS_ programmer, we have to be cognizant of the fact that despite all the syntatic abstractions of _class based inheritance_, at runtime it is still _prototype based_ under the hood!
 
+#### `typeof` & `instanceof` Operator
+In _TS_ identifiers can be at the **value level** or at the **type level**. And we have different constructs and semantics to deal with things that are _values_ and things that are _types_. However the `typeof` operator sort of has a dual role depending on what we use it on -
+```typescript
+class A{
+  name: string = '';
+}
+
+class B extends A{
+  id: string = '';
+}
+
+let a: A = new B();
+
+console.log(typeof a); // object
+console.log(typeof A); // function
+```
+- When `typeof` is applied on a **value** (such as the instance `a`) it just compiles to _JS_ `typeof` and gives a result of `object`.  
+- When we use `typeof` with a **type** (such as the class `A`) it is a _TS_ only construct and returns the `function` indicating that it refers to the **constructor function** for the "type".  
+
+Another operator that we can use to get type-information is `instanceof`. In our example from above it would show - 
+```typescript
+console.log(a instanceof B); // true
+console.log(a instanceof A); // true
+```
+Which implies that `a` is an instance of `B` and since that derives from `A` it is also an instance of that. Actually what this is doing is checking the **constructor** chain of the instance -
+```typescript
+const constr_of_a = a.constructor;
+console.log(constr_of_a == B); // true
+```
+OR
+```typescript
+const b = {};
+const constr_of_b = b.constructor;
+console.log(constr_of_b == Object);  // true
+console.log(b instanceof Object);  // true
+```
 ### Access Specifier
 For our illustrative examples above we let the class members be accessible across the code. In practice however if we have leaky encapsulations, it would defeat the purpose of OOP. Common OOP langauges provide **access specifier/modifier** before the member to control visibility to it. _TS_ provides the same familiar **access specifiers** -
 - `private` - Members are only accessible within the same class. _Note that derived classes share the private members for structure/shape, but cannot access them._
@@ -1928,3 +1968,42 @@ interface Concierge extends Person{
 }
 ```
 Of course this can a bit confusing to the purpose of _classes_ and _interfaces_ and should try not to mix up the intent. They can be useful when we are _extending_ someone else's library and we are not in control of that code.
+
+#### using 'this' as return type
+In _TS_ **'this'** can be used as a **"return type"** of a method. This is useful for methods that return instance of the same class, like methods we can chain (fluent interface). Let us see how this might work in the case of a configuration, if we were to implement it using a _builder pattern_ 
+```typescript
+// a class represneting Tax calculation
+class Tax{
+  constructor(readonly desc: string) { }
+  private rate: number = 0;
+
+  // method to configure rate and return the same instance
+  // return type is "this"
+  setRate(rate: number): this {
+    this.rate = rate;
+    return this;
+  }
+
+  calc(amt: number) {
+    return amt * this.rate / 100;
+  }
+}
+
+// calculate service tax on 1500 at 15%
+let taxAmt = new Tax('Service').setRate(15).calc(1500);
+console.log(taxAmt); // 225
+```
+Note how the return type of the `setRate` method is the keyword `this` - which in this context stands for the **type** of the current class. Of course we could have used the class `Tax` itself as the return type -
+```typescript
+setRate(rate: number): Tax {
+    this.rate = rate;
+    return this;
+  }
+```
+However if a class deriving from `Tax` say `Sepcialtax` needed to overide this method then the return type woudld have to be changed to `Specialtax`. To avoid the complications that arise from such method overriding, the _TS_ idiom is to use `this` as the return type whenever a method is retrning an instance of the same class.
+
+#### Mixins
+In traditional OOP languages the common approach to extend the behaviour of a class would be via _inheritance_. We dervie from a parent class and add/modify more specialized behaviour. However deep inheritance heirarchies can quickly get unwieldy. Also sometimes we need to extend our classes with behaviour of multiple classes, but languages such as _TS_, _JS_, _C#_, _Java_ etc. do not support _multiple inheritance_ (as that can lead to complex, ambiguous scenarios such as the _diamond problem_).  
+Some languages such as _Ruby_, _Scala_, _Kotlin_ etc. provide a different approach called **Mixins** that allows us to inject the behaviour of a class into another without the consuming class having to derive from it. In this style the classes have a **"has-a"** relationship as opposed to an **"is-a"** relationship with inheritance. Whilst **Mixins** are not specific to any particular programming language, it is more idiomatic in the languages listed above and they provide a consrtuct called **traits** to make it simple.  
+
+In _TS_ we do not have first-class constructs like **traits**, but we can implement the **Mixin** pattern using - a _function_ that takes a _class constructor_ and returns another _class constructor_ which has the additional behaviour/characteristics.
