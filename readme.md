@@ -2006,4 +2006,105 @@ However if a class deriving from `Tax` say `Sepcialtax` needed to overide this m
 In traditional OOP languages the common approach to extend the behaviour of a class would be via _inheritance_. We dervie from a parent class and add/modify more specialized behaviour. However deep inheritance heirarchies can quickly get unwieldy. Also sometimes we need to extend our classes with behaviour of multiple classes, but languages such as _TS_, _JS_, _C#_, _Java_ etc. do not support _multiple inheritance_ (as that can lead to complex, ambiguous scenarios such as the _diamond problem_).  
 Some languages such as _Ruby_, _Scala_, _Kotlin_ etc. provide a different approach called **Mixins** that allows us to inject the behaviour of a class into another without the consuming class having to derive from it. In this style the classes have a **"has-a"** relationship as opposed to an **"is-a"** relationship with inheritance. Whilst **Mixins** are not specific to any particular programming language, it is more idiomatic in the languages listed above and they provide a consrtuct called **traits** to make it simple.  
 
-In _TS_ we do not have first-class constructs like **traits**, but we can implement the **Mixin** pattern using - a _function_ that takes a _class constructor_ and returns another _class constructor_ which has the additional behaviour/characteristics.
+In _TS_ we do not have first-class constructs like **traits**, but we can implement the **Mixin** pattern using - a _function_ that takes a _class constructor_ and returns another _class constructor_ which has the additional behaviour/characteristics. Let us consider an example of a mixin that can add a `debug()` method to a class -
+```typescript
+// an account class
+class Account {
+  constructor(readonly accountNum: string
+    , private _amount: number = 0) { }
+
+  get amount(): number{
+    return this._amount;
+  }
+
+  set amount(value: number) {
+    if (value < 0) {
+      throw new Error(`amount has to be greater than 0!`);
+    }
+    else {
+      this._amount = value;
+    }
+  }
+  // debug details
+  debugInfo() {
+    return `AccNum = ${this.accountNum}, Amount = ${this._amount}`;
+  }
+}
+
+// construct function - represents meta-type
+type ConstructFunc = new (...args: any[]) => {}
+
+// 'mixin' function to add 'debug()' method
+// 'C' is a type that represents a type - meta-type
+function MixinDebug<C extends ConstructFunc>(Class: C) {
+  return class extends Class{
+    debug() {
+      console.log(this.debugInfo());
+      // at this point we do not say
+      // for sure that 'debugInfo()' exists
+    }
+  }
+}
+
+// 'Account' gets extended with 'debug()'
+// by the Mixin
+const DebugAccount = MixinDebug(Account);
+const myAcc = new DebugAccount('US98760XX', 100);
+
+myAcc.debug();// AccNum = US98760XX, Amount = 100
+```
+We have defined a _mixin_ function `MixinDebug` that can take a _class_ `Account` and return another _class_ that extends it and adds a method `debug()` to it. A few things to note here:
+- The _mixin_ is just a normal _TS_ function.
+- It needs to take a **"type"** as its parameter instead of a **value**.
+- This means that the **type of the parameter** has to be a **type of type** or **meta-type**.
+- The way to reprsent **type of a class** in _TS_ is to use **constructor function**
+```typescript
+type ConstructFunc = new (...args: any[]) => {}
+```
+- Now we can declare our _mixin_ as a function that takes a parameter of the type `ConstructFunc`
+```typescript
+function MixinDebug(Class: ConstructFunc) {
+    // ...
+}
+```
+- In the main code example we used **generics** with `ConstructFunc` as a **type guard** to make the code more flexible. (We shall see the benefit of this later)
+```typescript
+function MixinDebug<C extends ConstructFunc>(Class: C) {
+    // ...
+}
+```
+- Then we used a **class expression** to extend our `Class` argument passed in, and add a `debug()` method to it
+```typescript
+return class extends Class{
+    debug() {
+      console.log(this.debugInfo());
+    }
+  }
+```
+- Finally we call the `MixinDebug()` method passing in the **class** `Account` to get a new class that has the `debug()` method.
+```typescript
+const DebugAccount = MixinDebug(Account);
+const myAcc = new DebugAccount('US98760XX', 100);
+
+myAcc.debug();// AccNum = US98760XX, Amount = 100
+``` 
+
+As we can see we use a number of advanced _TS_ constructs and concepts to achieve the capability for _mixins_. Once we understand what is going on though it is quite straight forward, and to use a _mixin_ is simply just calling the function with the **type** passed in.
+
+One flaw in the code example is that we can call `MixinDebug` on any class and if it does not have `debugInfo()` method the code will fail. One way to help _TS_ enasure that we use the right type is to specify a **generic type paramter** for our _mixin_
+```typescript
+// give our construct function a generic type param
+type ConstructFunc<T> = new (...args: any[]) => T
+
+// give the generic type param a shape = {debugInfo(): void}
+function MixinDebug<C extends ConstructFunc<{debugInfo(): void}>>(Class: C) {
+  return class extends Class{
+    debug() {
+      console.log(this.debugInfo());
+    }
+  }
+}
+```
+We then specify a shape for our **generic type param** that has the method we believe our type should have. Now _TS_ can statically type check that the _class_ we pass in to our _mixin_ conforms to this shape.
+
+**Mixins** give us the ability to dynamically add behaviour/properties to classes in a type-safe manner. It is more compositional than pre-defined derived class hierarchies. It is also very flexible for reuse, in our example we could use the `MixinDebug` with any class that has a `debugInfo` method.
