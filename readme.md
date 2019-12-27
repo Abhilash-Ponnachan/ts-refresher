@@ -2108,3 +2108,93 @@ function MixinDebug<C extends ConstructFunc<{debugInfo(): void}>>(Class: C) {
 We then specify a shape for our **generic type param** that has the method we believe our type should have. Now _TS_ can statically type check that the _class_ we pass in to our _mixin_ conforms to this shape.
 
 **Mixins** give us the ability to dynamically add behaviour/properties to classes in a type-safe manner. It is more compositional than pre-defined derived class hierarchies. It is also very flexible for reuse, in our example we could use the `MixinDebug` with any class that has a `debugInfo` method.
+
+## Functions
+In _JS_ **functions** are the fundamental unit of _reuse_, _modularity_, _mimicking classes (via constructor functions)_, _encapsulation (via closures)_. Also like functional programming languages functions in _JS_ are _first-class_ values. They can be assigned to variables, passed as arguments, or returend from other functions.  
+In addition to all this _TS_ brings some new capabilities such as _function types_, _rest paramters_, handling of _'this'_. We will start with some of the more general concepts introduced in _ES6_.
+
+### Arrow Functions
+Before we look at _arrow functions_ we have to be familiar with the notion of _function declaration_ vs _function expression_ in _JS_. Simply put, _function declaration_ or _function statement_ is when we write our function with some name and body like a statement, whereas _function expression_ is when we write a function as the RHS of and expression. I.e. it is referenced by some variable. Practically they are same, however there are some nuances in how the _JS_ engine executes them.  
+- Function Declarations/Statements are hoisted (like variables), which means _JS_ loads the function into scope as soon as the file/module is loaded and therefore the can be referenced in code even before they are declared (lexically).
+- Function Expressions on the other hand do not get hoisted and come into scope only when the line of code is executed.
+
+The code snippet below demonstrates how this works - 
+```typescript
+console.log(add(2, 3));
+// 5 - this is fine
+
+function add(x, y){
+  return x + y;
+}
+
+console.log(prod(2, 3));
+// ReferenceError: prod is not defined
+
+const prod = function(x, y){
+  return x * y;
+}
+```
+Another key aspect of their difference is with regards to _'closures'_, or how _function expression_ closes over outer varaibles that are referenced within them. _Function declarations_ can use outer variables but they do not form _closures_. Overall this can result in behaviour that is not very evident at first glance -
+```typescript
+// using function declartion that uses
+// a variable as yet undefined 'i'
+console.log(add(2));
+// RefernceError: i is not defined
+
+let i = 3;
+function add(x){
+  // function declartion accessing
+  // external variable 'i'
+  return x + i;
+}
+console.log(add(2));
+// at this point 'i' is defined
+// 5 (2 + 3)
+
+i = 4;
+// change value of 'i'
+console.log(add(2));
+// 6 (2 + 4)
+
+
+let f = 2;
+const prod = function(x){
+  // function expression accessing
+  // external variable 'f'
+  return x * 2;
+}
+
+console.log(prod(5));
+// 10 (5 * 2)
+
+f = 3;
+// change value of 'f'
+console.log(prod(5));
+// still 10
+```
+As we can see the `add` function declaration uses an extrenal variable `i` and if we try to use this function before `i` is defined it gives an error. Also when we change the value of `i` from `3` to `4` this affects the function using it this variable.  
+However in the case of `prod` which is a _function expression_ it forms a closure over the variable `f` in that scope so that when we change the value of `f` from `2` to `3` it has no affect on it. The function expression has captured the value of the external variable.
+
+As an aside if we had used `var` instead of `let` for the function declaration it would result in a different bahaviour -
+```typescript
+// using function declartion
+console.log(add(2));
+// NaN
+console.log(i);
+// undefined
+
+var i = 3;
+function add(x){
+  // function declartion accessing
+  // external variable 'i'
+  return x + i;
+}
+console.log(add(2));
+// 5 (2 + 3)
+
+i = 4;
+// change value of 'i'
+console.log(add(2));
+// 6 (2 + 4)
+```
+For those not intimately familair with the workings of the _JS_ engine all of this might not be intuitive. Whilst all of these still exist in _TS_ we can follow some best practices that can help us avoid common gotchas!
