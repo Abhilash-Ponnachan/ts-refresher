@@ -2210,3 +2210,6 @@ console.log(incTwo(10)) // 10 + 1 + 2 = 13
 // then 'incTwo' used the new value of 'd' and incremented it by 2
 ```
 Whilst the above is a contrived example, in practice it is best to avoid patterns involving state mutations as they can be cause of hard to debug errors!
+
+### Function Types
+Like
