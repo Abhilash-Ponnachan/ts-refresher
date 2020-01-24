@@ -2113,9 +2113,10 @@ We then specify a shape for our **generic type param** that has the method we be
 In _JS_ **functions** are the fundamental unit of _reuse_, _modularity_, _mimicking classes (via constructor functions)_, _encapsulation (via closures)_. Also like functional programming languages functions in _JS_ are _first-class_ values. They can be assigned to variables, passed as arguments, or returend from other functions.  
 In addition to all this _TS_ brings some new capabilities such as _function types_, _rest paramters_, handling of _'this'_. We will start with some of the more general concepts introduced in _ES6_.
 
-### Arrow Functions
-Before we look at _arrow functions_ we have to be familiar with the notion of _function declaration_ vs _function expression_ in _JS_. Simply put, _function declaration_ or _function statement_ is when we write our function with some name and body like a statement, whereas _function expression_ is when we write a function as the RHS of and expression. I.e. it is referenced by some variable. Practically they are same, however there are some nuances in how the _JS_ engine executes them.  
-- Function Declarations/Statements are hoisted (like variables), which means _JS_ loads the function into scope as soon as the file/module is loaded and therefore the can be referenced in code even before they are declared (lexically).
+### Function Expression vs Declaration
+Before we delve deeper into functions, we have to be familiar with the notion of **function declaration** vs **function expression** in _JS_.  
+Simply put, _function declaration_ or _function statement_ is when we write our function with some name and body like a statement, whereas _function expression_ is when we write a function as the RHS of and expression. I.e. it is referenced by some variable. Practically they are same, however there are some nuances in how the _JS_ engine executes them.  
+- Function Declarations/Statements are **hoisted** (like variables), which means _JS_ loads the function into scope as soon as the file/module is loaded and therefore the can be referenced in code even before they are declared (lexically).
 - Function Expressions on the other hand do not get hoisted and come into scope only when the line of code is executed.
 
 The code snippet below demonstrates how this works - 
@@ -2134,67 +2135,78 @@ const prod = function(x, y){
   return x * y;
 }
 ```
-Another key aspect of their difference is with regards to _'closures'_, or how _function expression_ closes over outer varaibles that are referenced within them. _Function declarations_ can use outer variables but they do not form _closures_. Overall this can result in behaviour that is not very evident at first glance -
+
+### Closures
+Like other languages which support functions and first-class values, _JS_ and _TS_ functions have the ability to reference outer variables within its body. The function is said to close over teh extrenally referenced variable.  
+One important aspect to wrap our head around is the fact that the lifetime of the extrenally referenced variable is now dependent on the lifetime of the closure. This variable continues to exist behind the scene as long as the closure/s exist even if the variable goes out of scope!
+
 ```typescript
-// using function declartion that uses
-// a variable as yet undefined 'i'
-console.log(add(2));
-// RefernceError: i is not defined
+  let i = 2 
+  // external variable 'i' referenced by the function expression
+  const prod = (x: number) => x * i
 
-let i = 3;
-function add(x){
-  // function declartion accessing
-  // external variable 'i'
-  return x + i;
-}
-console.log(add(2));
-// at this point 'i' is defined
-// 5 (2 + 3)
+  console.log(prod(3)) // 3 * 2 = 6
 
-i = 4;
-// change value of 'i'
-console.log(add(2));
-// 6 (2 + 4)
+  // change value of 'i'
+  i = 3
+  console.log(prod(3)) // 3 * 3 = 9
 
+  // function returning a closure
+  const inc = (() => {
+    let d = 0
+    return (x: number) => {
+      // closes over external variable 'd'
+      return x + (++d)
+    }
+  })()
+  // by now 'd' has gone out of scope
 
-let f = 2;
-const prod = function(x){
-  // function expression accessing
-  // external variable 'f'
-  return x * 2;
-}
-
-console.log(prod(5));
-// 10 (5 * 2)
-
-f = 3;
-// change value of 'f'
-console.log(prod(5));
-// still 10
+  console.log(inc(10)) // 10 + 1 = 11
+  console.log(inc(10)) // 10 + 2 = 12
+  console.log(inc(10)) // 10 + 3 = 13
+  console.log(inc(10)) // 10 + 4 = 14
 ```
-As we can see the `add` function declaration uses an extrenal variable `i` and if we try to use this function before `i` is defined it gives an error. Also when we change the value of `i` from `3` to `4` this affects the function using it this variable.  
-However in the case of `prod` which is a _function expression_ it forms a closure over the variable `f` in that scope so that when we change the value of `f` from `2` to `3` it has no affect on it. The function expression has captured the value of the external variable.
-
-As an aside if we had used `var` instead of `let` for the function declaration it would result in a different bahaviour -
+In the second example of the `inc` function, we returned a closure that captures the variable `d` and everytime we call invoke that closure we internally increament the value of `d` by 1. With this we have effectively achieved **encapsulation** (of `d`) and ability to maintain **state**.  
+Managing state within closures can have certain gotchas - every _new instance_ a closure will have its own copy of the closed varible -
 ```typescript
-// using function declartion
-console.log(add(2));
-// NaN
-console.log(i);
-// undefined
-
-var i = 3;
-function add(x){
-  // function declartion accessing
-  // external variable 'i'
-  return x + i;
+const incFact = () => {
+  let i = 0
+  return (x: number) => {
+    return x + (++i)
+  }
 }
-console.log(add(2));
-// 5 (2 + 3)
 
-i = 4;
-// change value of 'i'
-console.log(add(2));
-// 6 (2 + 4)
+const incA = incFact()
+console.log(incA(10)) // 11
+console.log(incA(10)) // 12
+
+const incB = incFact()
+console.log(incB(10)) // 11
+console.log(incB(10)) // 12
+
+// 'incA' and 'incB' have their own copies of 'd'
 ```
-For those not intimately familair with the workings of the _JS_ engine all of this might not be intuitive. Whilst all of these still exist in _TS_ we can follow some best practices that can help us avoid common gotchas!
+However if we have two closures created on the same instance of a variable, then they will share the varaible and one can mutate the state of another -
+```typescript
+// function returning 2 closures
+const [incOne, incTwo] = (() => {
+  let d = 0
+  const one = (x: number) => {
+    d += 1 // inc 'd' by 1
+    return x + d
+  }
+  const two = (x: number) => {
+    d += 2 // inc 'd' by 2
+    return x + d
+  }
+  // return 2 colusres 
+  return [one, two]
+})()
+
+console.log(incOne(10)) // 10 + 1 = 11
+console.log(incTwo(10)) // 10 + 1 + 2 = 13
+
+// 'incOne' incremented the value of 'd' by 1
+// then 'incTwo' used the new value of 'd' and incremented it by 2
+```
+Whilst the above is a contrived example, in practice it is best to avoid patterns involving state mutations as they can be cause of hard to debug errors!
