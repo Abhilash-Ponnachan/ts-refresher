@@ -101,7 +101,7 @@ The first step is to setup a development environment to play with.
     In almost any software development loop we would use tools for _linting_, _testing_, _building_, _packaging_, and _deploying_ (linters : ESLint, TSLint; build-tools : Ant, MSBuild, Make, Rake, Gulp, Grunt). As an IDE it is importnat to be able to execute these tools and analyze their results from within VS Code. This is what _tasks_ allow us to do.
   - To configure a _task_ within VS Code we can use the _"Command Palette"_ (F1 or Ctrl+Shift+p)
     - Start typing "Configure Default Build Task" and select that optoin. This will give us a dropdown with the options as shown - 
-    ![config-build-task](config-build-task.png)
+    ![config-build-task](assets/config-build-task.png)
     In this case VS Code has detected that this is a TS project from the **tsconfig.json** file.  
   _Note that we can also configure other "Custom Tasks" if we need, for example to execute some shell scripts._
 
@@ -157,7 +157,7 @@ The first step is to setup a development environment to play with.
 
 - **Debug the code**  
     Running the JS file from the commandline is all fine, but when we need to debug it is better to do that from the IDE. To enable this, we do _"Start Debugging"_ (F5) and again VS Code will not know exactly what to do, so it prompts us to choose a runtime / debug-envirinment:
-    ![choose-debug-env](select-debug-process.png) 
+    ![choose-debug-env](assets/select-debug-process.png) 
     _Note that VS Code comes with support for the Node.js runtime, but we can install debuggers for other runtimes such as Python, C++, C#, Chrome etc. if we need._  
     In this case we choose _Node.js_ and this will now create an additional file **launch.json** in the hidden _".vscode"_ folder. This file contains the configuration information to launch the applicaion in debug mode.
     ```json
@@ -178,7 +178,7 @@ The first step is to setup a development environment to play with.
     ```
     The _"type"_ indicates what the runtime environment is, _"request"_ indicates if it should _launch_ or _attach_ and the _"program"_ points to the entry-point file.  
     Now we can set a breakpoint and start debugging (F5), step over, step into, watch and modify variables etc. as we would do in any other IDE.
-    ![breakpoint](breakpoint.png)
+    ![breakpoint](assets/breakpoint.png)
     
     This also changes the _"sourceMap"_ attribute value in the _"tsconfig.json"_ - 
     ```json
